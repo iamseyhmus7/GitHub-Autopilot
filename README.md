@@ -32,21 +32,25 @@ Built for AI assistants and LangChain/LangGraph agents using the [Model Context 
 
 ## 📦 Installation
 
+### Package Kurulumu (Kullanıcılar İçin)
+
 ```bash
 pip install mcp-github-advanced
 ```
 
-Or with `uvx` (recommended for MCP):
+Veya MCP sunucuları için önerildiği gibi `uvx` kullanarak doğrudan çalıştırabilirsiniz:
 
 ```bash
 uvx mcp-github-advanced
 ```
 
-### Development Install
+### Kaynak Koddan Kurulum (Geliştiriciler İçin)
+
+Projeyi kendi bilgisayarınıza klonlayıp o şekilde kullanmak (veya geliştirmek) isterseniz:
 
 ```bash
-git clone https://github.com/iamseyhmus7/mcp-github-advanced.git
-cd mcp-github-advanced
+git clone https://github.com/iamseyhmus7/GitHub-Autopilot.git
+cd GitHub-Autopilot
 pip install -e ".[dev]"
 ```
 
@@ -85,43 +89,52 @@ For full functionality, your PAT needs these scopes:
 - `repo` — Access private repositories
 - `read:user` — Read user profile
 
-### 3. MCP Client Configuration
+## 🎮 Kullanım (AI Asistanlarına Ekleme)
 
-#### Claude Desktop
+Bu server, standart bir stdio altyapısı kullanarak JSON-RPC 2.0 mimarisini destekler. AI istemcileriniz için (örn: Claude Desktop, Cursor, Antigravity) konfigürasyon dosyasına (`claude_desktop_config.json` veya IDE `mcp_config.json`) kullanım yönteminize göre aşağıdaki bloklardan birini eklemeniz yeterlidir:
 
-Add to `claude_desktop_config.json`:
+### 1. PyPI Üzerinden Pip Install Sonrası:
 
 ```json
 {
   "mcpServers": {
-    "github-advanced": {
-      "command": "uvx",
-      "args": ["mcp-github-advanced"],
-      "env": {
-        "GITHUB_TOKEN": "ghp_your_token_here"
-      }
+    "mcp-github-advanced": {
+      "command": "mcp-github-advanced",
+      "env": {"GITHUB_TOKEN": "ghp_..."}
     }
   }
 }
 ```
 
-#### Cursor / VS Code
-
-Add to `.cursor/mcp.json` or equivalent:
+### 2. UVX ile (Sıfır Kurulum, Anında Çalıştırma):
 
 ```json
 {
   "mcpServers": {
-    "github-advanced": {
+    "mcp-github-advanced": {
       "command": "uvx",
       "args": ["mcp-github-advanced"],
-      "env": {
-        "GITHUB_TOKEN": "ghp_your_token_here"
-      }
+      "env": {"GITHUB_TOKEN": "ghp_..."}
     }
   }
 }
 ```
+
+### 3. GitHub Kaynak Kodundan Çalıştırma:
+
+```json
+{
+  "mcpServers": {
+    "mcp-github-advanced": {
+      "command": "python",
+      "args": ["-m", "mcp_github_advanced"],
+      "env": {"GITHUB_TOKEN": "ghp_..."}
+    }
+  }
+}
+```
+
+💡 **İpucu:** Kurulumu yaptıktan sonra asistanınızın "iamseyhmus7/GitHub-Autopilot reposunun bilgilerini getir" gibi komutları anlayabildiğini görebilirsiniz!
 
 ---
 
@@ -196,17 +209,7 @@ ruff check src/ tests/
 pip install mcp-github-advanced
 ```
 
-### Smithery.ai
-
-Deploy via [`smithery.yaml`](smithery.yaml):
-
-```bash
-npx @anthropic/smithery publish
-```
-
----
-
-## 📝 License
+---## 📝 License
 
 MIT License — see [LICENSE](LICENSE) for details.
 
