@@ -1,46 +1,46 @@
 ---
-description: Python style and formatting rules for mcp-github-advanced
+description: mcp-github-advanced için Python stil ve formatlama kuralları
 ---
 
-# Python Style Rules
+# Python Stil Kuralları
 
-## General
-- Python 3.10+ with `from __future__ import annotations`
-- Line length: 100 characters max (configured in `pyproject.toml`)
-- Use `ruff` for linting: `ruff check src/ tests/`
+## Genel
+- Python 3.10+ ile `from __future__ import annotations` kullanılır
+- Satır uzunluğu: en fazla 100 karakter (`pyproject.toml`'de yapılandırılır)
+- Lint için `ruff` kullanılır: `ruff check src/ tests/`
 
-## Formatting
-- 4 spaces for indentation (no tabs)
-- Double quotes for strings
-- Trailing commas in multi-line structures
-- f-strings preferred over `.format()` or `%`
+## Formatlama
+- Girintileme: 4 boşluk (tab yok)
+- String'ler için çift tırnak kullanılır
+- Çok satırlı yapılarda sondaki virgül yazılır
+- `.format()` veya `%` yerine f-string tercih edilir
 
-## Type Hints
-- Use type hints for all function signatures
-- Use `Optional[T]` or `T | None` for nullable types
-- Use `dict[str, Any]` instead of `Dict[str, Any]` (lowercase generics)
+## Tür İpuçları (Type Hints)
+- Tüm fonksiyon imzalarında tür ipucu kullanılır
+- Nullable türler için `Optional[T]` veya `T | None` kullanılır
+- Büyük harfli jenerikler yerine küçük harfli kullanılır: `dict[str, Any]` (`Dict[str, Any]` değil)
 
-## Imports
-- Group imports: stdlib → third-party → local
-- Use `ruff` import sorting (`select = ["I"]` in pyproject.toml)
-- Prefer absolute imports
+## İçe Aktarmalar (Imports)
+- Gruplandırma sırası: stdlib → üçüncü parti → yerel
+- `ruff` ile otomatik sıralama yapılır (`select = ["I"]` pyproject.toml'de)
+- Mutlak import tercih edilir
 
-## Naming
-- `snake_case` for functions, variables, modules
-- `PascalCase` for classes
-- `UPPER_SNAKE_CASE` for constants
-- Prefix private methods/attributes with `_`
+## İsimlendirme
+- `snake_case` → fonksiyonlar, değişkenler, modüller
+- `PascalCase` → sınıflar
+- `UPPER_SNAKE_CASE` → sabitler
+- Özel (private) metod ve nitelikler `_` ile başlar
 
-## Async
-- All GitHub API interactions MUST be async (`async def`)
-- Use `httpx.AsyncClient` (not `requests`)
-- Use `asyncio.run()` only at entry points
+## Asenkron (Async)
+- Tüm GitHub API etkileşimleri async olmalıdır (`async def`)
+- `requests` yerine `httpx.AsyncClient` kullanılır
+- `asyncio.run()` yalnızca giriş noktalarında kullanılır
 
-## Docstrings
-- Google-style docstrings for all public functions/classes
-- Include `Args:`, `Returns:`, `Raises:` sections as needed
+## Docstring'ler
+- Tüm public fonksiyon ve sınıflar için Google-stil docstring yazılır
+- Gerektiğinde `Args:`, `Returns:`, `Raises:` bölümleri eklenir
 
-## Error Handling
-- Never silently swallow exceptions
-- Log warnings for non-critical failures (e.g., cache misses)
-- Raise specific exceptions, not generic `Exception`
+## Hata Yönetimi
+- İstisnalar sessizce yutulmaz
+- Kritik olmayan hatalar için uyarı loglanır (örn: önbellek ıskalamaları)
+- Genel `Exception` yerine spesifik istisnalar fırlatılır

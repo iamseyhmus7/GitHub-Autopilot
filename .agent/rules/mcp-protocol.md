@@ -1,30 +1,30 @@
 ---
-description: MCP protocol rules and conventions for mcp-github-advanced
+description: mcp-github-advanced için MCP protokol kuralları ve konvansiyonları
 ---
 
-# MCP Protocol Rules
+# MCP Protokol Kuralları
 
-## Server Implementation
+## Sunucu Uygulaması
 
-- Use low-level `mcp.server.Server` — NOT `FastMCP`
-- Transport: `stdio` via `mcp.server.stdio.stdio_server`
-- Register tools with `@app.list_tools()` and `@app.call_tool()` decorators
+- Low-level `mcp.server.Server` kullanılır — `FastMCP` **KULLANILMAZ**
+- Transport: `stdio` — `mcp.server.stdio.stdio_server` ile
+- Araçlar `@app.list_tools()` ve `@app.call_tool()` dekoratörleri ile kaydedilir
 
-## Tool Registration
+## Araç Kaydı
 
-- All tools must be in the `TOOLS` list in `server.py`
-- Each tool needs: `name`, `description`, `inputSchema`
-- Input schema follows JSON Schema format
-- Required parameters listed in `"required"` array
+- Tüm araçlar `server.py` içindeki `TOOLS` listesinde tanımlanır
+- Her araçta şunlar gereklidir: `name`, `description`, `inputSchema`
+- Giriş şeması JSON Schema formatını takip eder
+- Zorunlu parametreler `"required"` dizisinde listelenir
 
-## Tool Response Format
+## Araç Yanıt Formatı
 
-- Always return `list[TextContent]`
-- Serialize data as JSON with `json.dumps(result, indent=2, ensure_ascii=False)`
-- On error: return `TextContent` with error message (don't raise)
-- Truncate output to stay under 8192 tokens
+- Her zaman `list[TextContent]` döndürülür
+- Veri JSON olarak serileştirilir: `json.dumps(result, indent=2, ensure_ascii=False)`
+- Hata durumunda: hata mesajı ile `TextContent` döndürülür (istisna fırlatılmaz)
+- Çıktı 8192 token'ın altında tutulmak için kesilir
 
-## Entry Point
+## Giriş Noktası
 
 ```python
 # pyproject.toml
@@ -38,24 +38,24 @@ def main() -> None:
     asyncio.run(_run())
 ```
 
-## Lifecycle
+## Yaşam Döngüsü
 
-1. Initialize `AuthManager`, `RedisCache`, `GitHubClient`
-2. Call `github_client.start()` to open HTTP connections
-3. Run `stdio_server()` context → `app.run()`
-4. On shutdown: `github_client.close()`
+1. `AuthManager`, `RedisCache`, `GitHubClient` başlatılır
+2. `github_client.start()` ile HTTP bağlantıları açılır
+3. `stdio_server()` bağlamı → `app.run()` çalıştırılır
+4. Kapanışta: `github_client.close()` çağrılır
 
-## Adding New Tools
+## Yeni Araç Ekleme
 
-1. Add method to `GitHubClient` in `github.py`
-2. Add `Tool(...)` definition to `TOOLS` list in `server.py`
-3. Add `case` branch in `_dispatch()` function
-4. Add TTL entry in `cache.py` if cacheable
-5. Add tests in `test_github.py` and `test_server.py`
+1. `github.py` içindeki `GitHubClient`'a yeni metod ekle
+2. `server.py`'daki `TOOLS` listesine `Tool(...)` tanımı ekle
+3. `_dispatch()` fonksiyonuna yeni `case` dalı ekle
+4. Önbelleğe alınabilirse `cache.py`'ye TTL girişi ekle
+5. `test_github.py` ve `test_server.py`'ye testler ekle
 
-## LLM Integration
+## LLM Entegrasyonu
 
-- Model: `gemini-2.0-flash` via `langchain-google-genai`
-- `temperature=0` for deterministic code analysis
-- `max_tokens=8192` output limit
-- Tool outputs must fit within this limit
+- Model: `gemini-2.0-flash` — `langchain-google-genai` paketi ile
+- `temperature=0` — tutarlı kod analizi için
+- `max_tokens=8192` çıktı limiti
+- Araç çıktıları bu limitin içinde kalmalıdır
