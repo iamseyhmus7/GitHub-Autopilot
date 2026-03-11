@@ -1,0 +1,14 @@
+name: mcp-github-advanced
+description: >
+  Advanced GitHub MCP server. Repo analysis, PR management,
+  code review, CI/CD monitoring and release management
+  via GitHub REST + GraphQL API.
+categories:
+  - developer-tools
+  - github
+  - code-review
+license: MIT
+startCommand:
+  type: stdio
+  command: uvx
+  args: ["mcp-github-advanced"]
