@@ -1,36 +1,36 @@
 ---
 name: github-mcp
-description: Skill for working with the mcp-github-advanced MCP server codebase
+description: mcp-github-advanced MCP sunucu kod tabanı ile çalışma becerisi
 ---
 
-# GitHub MCP Skill
+# GitHub MCP Becerisi
 
-This skill provides instructions for working with the `mcp-github-advanced` MCP server codebase.
+Bu beceri, `mcp-github-advanced` MCP sunucu kod tabanı ile çalışmak için talimatlar sağlar.
 
-## Overview
+## Genel Bakış
 
-`mcp-github-advanced` is an MCP server that exposes 14 GitHub API tools via the Model Context Protocol. It supports:
+`mcp-github-advanced`, Model Context Protocol üzerinden 14 GitHub API aracını sunan bir MCP sunucusudur. Desteklediği özellikler:
 
-- **GitHub REST API v3** — repositories, commits, PRs, issues, actions
-- **GitHub GraphQL v4** — contributor statistics, complex queries
-- **Redis caching** — with intelligent TTL strategy
-- **PAT + OAuth 2.0** — dual authentication support
-- **LLM integration** — via `gemini-2.0-flash` and `langchain-google-genai`
+- **GitHub REST API v3** — repolar, commit'ler, PR'lar, issue'lar, actions
+- **GitHub GraphQL v4** — katkıda bulunan istatistikleri, karmaşık sorgular
+- **Redis önbellekleme** — akıllı TTL stratejisi ile
+- **PAT + OAuth 2.0** — çift kimlik doğrulama desteği
+- **LLM entegrasyonu** — `gemini-2.0-flash` ve `langchain-google-genai` ile
 
-## Architecture
+## Mimari
 
 ```
-server.py  →  14 MCP tools (list_tools + call_tool)
-  ├── github.py  →  REST + GraphQL client (httpx async)
-  ├── auth.py    →  PAT + OAuth 2.0 authentication
-  └── cache.py   →  Redis caching with TTL strategy
+server.py  →  14 MCP aracı (list_tools + call_tool)
+  ├── github.py  →  REST + GraphQL istemcisi (httpx async)
+  ├── auth.py    →  PAT + OAuth 2.0 kimlik doğrulama
+  └── cache.py   →  TTL stratejili Redis önbellekleme
 ```
 
-## Key Conventions
+## Temel Konvansiyonlar
 
-### 1. Versioned API Headers
+### 1. Versiyonlu API Header'ları
 
-**Every** GitHub API request must include:
+**Her** GitHub API isteğinde şunlar bulunmalıdır:
 ```python
 {
     "Authorization": f"Bearer {token}",
@@ -39,56 +39,56 @@ server.py  →  14 MCP tools (list_tools + call_tool)
 }
 ```
 
-### 2. Rate Limiting
+### 2. Rate Limit (İstek Sınırı)
 
-- Check `X-RateLimit-Remaining` after every response
-- Sleep when remaining < 10
-- Use `tenacity` retry for 429/403
+- Her yanıttan sonra `X-RateLimit-Remaining` kontrol edilir
+- Kalan < 10 olduğunda bekle
+- 429/403 için `tenacity` retry kullan
 
-### 3. Output Chunking
+### 3. Çıktı Kesme (Chunking)
 
-- Max output ≈ 30,000 characters (~8192 tokens)
-- Use `_chunk_text()` for truncation
-- Individual file patches capped at 5000 chars
+- Maksimum çıktı ≈ 30.000 karakter (~8192 token)
+- Kısaltma için `_chunk_text()` kullanılır
+- Tek dosya yama (patch) çıktısı 5000 karakterle sınırlıdır
 
-### 4. Cache TTL Strategy
+### 4. Önbellek TTL Stratejisi
 
-| Tool | TTL |
+| Araç | TTL |
 |------|-----|
-| `get_repo_info` | 1 hour |
-| `list_commits` | 5 min |
-| `get_pr_diff` | 10 min |
-| `get_workflow_logs` | 1 min |
-| `get_file_content` | 30 min |
-| Write operations | No cache |
+| `get_repo_info` | 1 saat |
+| `list_commits` | 5 dk |
+| `get_pr_diff` | 10 dk |
+| `get_workflow_logs` | 1 dk |
+| `get_file_content` | 30 dk |
+| Yazma işlemleri | Önbellek yok |
 
-### 5. Testing
+### 5. Test Etme
 
-- **Always** use `respx` for HTTP mocking
-- **Never** hit real GitHub API in tests
-- Test scenarios: success, 404, 401, rate limit
+- HTTP mocklama için **her zaman** `respx` kullanılır
+- Testlerde **asla** gerçek GitHub API'ye istek gönderilmez
+- Test senaryoları: başarılı, 404, 401, rate limit
 
 ### 6. LLM
 
 - Model: `gemini-2.0-flash`
-- `temperature=0` for consistent code analysis
+- `temperature=0` — tutarlı kod analizi için
 - `max_tokens=8192`
-- Package: `langchain-google-genai`
+- Paket: `langchain-google-genai`
 
-## Common Tasks
+## Sık Yapılan İşlemler
 
-- **Add a tool**: See `.agent/workflows/add-tool.md`
-- **Publish**: See `.agent/workflows/publish-to-pypi.md`
-- **Run tests**: `pytest` (with `asyncio_mode = "auto"`)
+- **Araç ekle**: Bkz. `.agent/workflows/add-tool.md`
+- **Yayınla**: Bkz. `.agent/workflows/publish-to-pypi.md`
+- **Test çalıştır**: `pytest` (`asyncio_mode = "auto"` ile)
 - **Lint**: `ruff check src/ tests/`
 
-## File Map
+## Dosya Haritası
 
-| File | Purpose |
-|------|---------|
-| `server.py` | MCP server, 14 tool definitions, dispatch |
-| `github.py` | GitHub API client (REST + GraphQL) |
-| `auth.py` | PAT + OAuth 2.0 authentication |
-| `cache.py` | Redis caching with TTL |
-| `__init__.py` | Version string |
-| `__main__.py` | `python -m` entry point |
+| Dosya | Amacı |
+|-------|-------|
+| `server.py` | MCP sunucusu, 14 araç tanımı, yönlendirici |
+| `github.py` | GitHub API istemcisi (REST + GraphQL) |
+| `auth.py` | PAT + OAuth 2.0 kimlik doğrulama |
+| `cache.py` | TTL'li Redis önbellekleme |
+| `__init__.py` | Versiyon bilgisi |
+| `__main__.py` | `python -m` giriş noktası |
