@@ -1,115 +1,115 @@
 ---
-description: How to add a new MCP tool to the server
+description: Sunucuya yeni bir MCP aracı nasıl eklenir
 ---
 
-# Add a New MCP Tool
+# Yeni MCP Aracı Ekleme
 
-Follow these steps to add a new tool to `mcp-github-advanced`.
+`mcp-github-advanced` sunucusuna yeni bir araç eklemek için şu adımları izleyin.
 
-## 1. Implement the GitHub Client Method
+## 1. GitHub İstemci Metodunu Uygula
 
-In `src/mcp_github_advanced/github.py`, add a new async method to `GitHubClient`:
+`src/mcp_github_advanced/github.py` dosyasında `GitHubClient`'a yeni bir async metod ekleyin:
 
 ```python
-async def new_tool_name(self, owner: str, repo: str, ...) -> dict:
-    """Docstring explaining what this tool does."""
-    # Check cache
+async def yeni_arac_adi(self, owner: str, repo: str, ...) -> dict:
+    """Bu aracın ne yaptığını açıklayan docstring."""
+    # Önbellekten kontrol et
     if self.cache:
-        cached = await self.cache.get(owner, repo, "new_tool_name")
+        cached = await self.cache.get(owner, repo, "yeni_arac_adi")
         if cached:
             return cached
 
-    # Make API call with versioned headers (automatic via self.headers)
+    # Versiyonlu header'lar ile API isteği gönder (self.headers ile otomatik)
     resp = await self._get(f"{GITHUB_API}/repos/{owner}/{repo}/endpoint")
     data = resp.json()
 
-    # Transform response
+    # Yanıtı dönüştür
     result = { ... }
 
-    # Chunk large outputs
+    # Büyük çıktıları kes
     if "content" in result:
         result["content"] = _chunk_text(result["content"])
 
-    # Cache result
+    # Sonucu önbelleğe al
     if self.cache:
-        await self.cache.set(owner, repo, "new_tool_name", result)
+        await self.cache.set(owner, repo, "yeni_arac_adi", result)
     return result
 ```
 
-## 2. Add TTL in Cache
+## 2. Önbellek TTL'si Ekle
 
-In `src/mcp_github_advanced/cache.py`, add TTL entry:
+`src/mcp_github_advanced/cache.py` dosyasına TTL girişi ekleyin:
 
 ```python
 TTL = {
     ...
-    "new_tool_name": 300,  # 5 minutes (or appropriate TTL)
+    "yeni_arac_adi": 300,  # 5 dakika (veya uygun TTL değeri)
 }
 ```
 
-## 3. Register the Tool
+## 3. Aracı Kaydet
 
-In `src/mcp_github_advanced/server.py`, add to the `TOOLS` list:
+`src/mcp_github_advanced/server.py` dosyasındaki `TOOLS` listesine ekleyin:
 
 ```python
 Tool(
-    name="new_tool_name",
-    description="Description of what the tool does",
+    name="yeni_arac_adi",
+    description="Aracın ne yaptığının açıklaması",
     inputSchema={
         "type": "object",
         "properties": {
-            "owner": {"type": "string", "description": "Repository owner"},
-            "repo": {"type": "string", "description": "Repository name"},
-            # ... additional parameters
+            "owner": {"type": "string", "description": "Repo sahibi"},
+            "repo": {"type": "string", "description": "Repo adı"},
+            # ... ek parametreler
         },
         "required": ["owner", "repo"],
     },
 ),
 ```
 
-## 4. Add Dispatch Case
+## 4. Yönlendirme Dalı Ekle
 
-In the `_dispatch()` function in `server.py`:
+`server.py`'deki `_dispatch()` fonksiyonuna:
 
 ```python
-case "new_tool_name":
-    return await gh.new_tool_name(owner, repo, ...)
+case "yeni_arac_adi":
+    return await gh.yeni_arac_adi(owner, repo, ...)
 ```
 
-## 5. Write Tests
+## 5. Testleri Yaz
 
-In `tests/test_github.py`:
+`tests/test_github.py` dosyasına:
 
 ```python
-class TestNewToolName:
+class TestYeniAracAdi:
     @respx.mock
-    async def test_success(self, github_client):
+    async def test_basarili(self, github_client):
         respx.get("https://api.github.com/repos/owner/repo/endpoint").mock(
             return_value=httpx.Response(200, json={...})
         )
-        result = await github_client.new_tool_name("owner", "repo")
-        assert result[...] == expected
+        result = await github_client.yeni_arac_adi("owner", "repo")
+        assert result[...] == beklenen_deger
 
     @respx.mock
-    async def test_404(self, github_client):
-        # Test 404 scenario
+    async def test_404_bulunamadi(self, github_client):
+        # 404 senaryosunu test et
         ...
 
     @respx.mock
-    async def test_401(self, github_client):
-        # Test unauthorized scenario
+    async def test_401_yetkisiz(self, github_client):
+        # Yetkisiz erişim senaryosunu test et
         ...
 ```
 
-## 6. Update Documentation
+## 6. Dokümantasyonu Güncelle
 
-- Add tool to the table in `AGENTS.md`
-- Add tool to `README.md` features table
-- Increment version in `__init__.py` if needed
+- `AGENTS.md` içindeki araç tablosuna ekle
+- `README.md` özellikler tablosuna ekle
+- Gerekirse `__init__.py`'deki versiyonu artır
 
-## 7. Commit
+## 7. Commit At
 
 ```bash
 git add .
-git commit -m "feat: add new_tool_name tool"
+git commit -m "feat: yeni_arac_adi araci eklendi"
 ```

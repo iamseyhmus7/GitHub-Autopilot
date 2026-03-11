@@ -1,87 +1,87 @@
 ---
-description: How to publish mcp-github-advanced to PyPI
+description: mcp-github-advanced paketini PyPI'ye nasıl yayınlanır
 ---
 
-# Publish to PyPI
+# PyPI'ye Yayınlama
 
-## Prerequisites
+## Ön Koşullar
 
-- PyPI account with API token
-- `build` and `twine` packages installed
+- API token'ı olan bir PyPI hesabı
+- `build` ve `twine` paketlerinin kurulu olması
 
-## Steps
+## Adımlar
 
-### 1. Update Version
+### 1. Versiyonu Güncelle
 
-Edit `src/mcp_github_advanced/__init__.py`:
+`src/mcp_github_advanced/__init__.py` dosyasını düzenleyin:
 
 ```python
-__version__ = "0.1.1"  # bump version
+__version__ = "0.1.1"  # versiyonu artır
 ```
 
-### 2. Clean Previous Builds
+### 2. Önceki Derleme Dosyalarını Temizle
 
 ```bash
 rm -rf dist/ build/ *.egg-info
 ```
 
-### 3. Build Package
+### 3. Paketi Derle
 
 ```bash
 pip install build
 python -m build
 ```
 
-This creates:
+Bu şunları oluşturur:
 - `dist/mcp_github_advanced-0.1.1.tar.gz`
 - `dist/mcp_github_advanced-0.1.1-py3-none-any.whl`
 
-### 4. Check Package
+### 4. Paketi Kontrol Et
 
 ```bash
 pip install twine
 twine check dist/*
 ```
 
-### 5. Upload to Test PyPI (Optional)
+### 5. Test PyPI'ye Yükle (Opsiyonel)
 
 ```bash
 twine upload --repository testpypi dist/*
 ```
 
-Verify: `pip install -i https://test.pypi.org/simple/ mcp-github-advanced`
+Doğrulama: `pip install -i https://test.pypi.org/simple/ mcp-github-advanced`
 
-### 6. Upload to PyPI
+### 6. PyPI'ye Yükle
 
 ```bash
 twine upload dist/*
 ```
 
-You'll be prompted for:
-- Username: `__token__`
-- Password: your PyPI API token (`pypi-...`)
+Şunlar sorulacaktır:
+- Kullanıcı adı: `__token__`
+- Şifre: PyPI API token'ınız (`pypi-...`)
 
-### 7. Verify Installation
+### 7. Kurulumu Doğrula
 
 ```bash
 pip install mcp-github-advanced
 uvx mcp-github-advanced --help
 ```
 
-### 8. Create Git Tag
+### 8. Git Etiketi Oluştur
 
 ```bash
-git tag -a v0.1.1 -m "Release v0.1.1"
+git tag -a v0.1.1 -m "Sürüm v0.1.1"
 git push origin v0.1.1
 ```
 
-### 9. Create GitHub Release
+### 9. GitHub Sürümü Oluştur
 
-Create a release on GitHub from the tag with changelog.
+Etiketten bir GitHub sürümü oluşturun ve değişiklik günlüğünü ekleyin.
 
-## CI/CD Automation (Optional)
+## CI/CD Otomasyonu (Opsiyonel)
 
-Add to `.github/workflows/publish.yml` for automated releases on tag push:
+Etiket push'unda otomatik yayınlama için `.github/workflows/publish.yml` ekleyin:
 
 ```yaml
 on:
