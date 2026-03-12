@@ -24,7 +24,7 @@ Bu server bir **web uygulamasının backend'i** olarak tasarlanmıştır:
 ```
 ┌─────────────────────────────────────────────┐
 │              server.py                       │
-│         14 MCP Aracı (list_tools)           │
+│         15 MCP Aracı (list_tools)           │
 │         call_tool() yönlendirici            │
 └──────────────────┬──────────────────────────┘
                    │
@@ -99,7 +99,7 @@ mcp-github-advanced/
 │   └── mcp_github_advanced/
 │       ├── __init__.py                ← __version__ = "0.1.0"
 │       ├── __main__.py                ← python -m girişi
-│       ├── server.py                  ← 14 MCP aracı
+│       ├── server.py                  ← 15 MCP aracı
 │       ├── github.py                  ← GitHub REST + GraphQL client
 │       ├── auth.py                    ← OAuth + PAT yönetimi
 │       └── cache.py                   ← Redis önbellekleme
@@ -125,12 +125,13 @@ mcp-github-advanced/
 
 ---
 
-## 🛠️ 14 MCP Aracı
+## 🛠️ 15 MCP Aracı
 
 ### 📁 Repo Araçları
 
 | Araç | Açıklama | Zorunlu Parametre |
 |------|----------|-------------------|
+| `list_user_repos` | Bir kullanıcının tüm genel repolarını listeler | `username` |
 | `get_repo_info` | Repo metadata: yıldız, fork, dil, boyut | `owner`, `repo` |
 | `get_file_content` | Herhangi bir dosyanın içeriği | `owner`, `repo`, `path` |
 | `list_repo_files` | Repo dizin yapısı (tree) | `owner`, `repo` |
@@ -276,6 +277,7 @@ TTL = {
     "get_pr_diff":          600,   # 10 dakika
     "get_workflow_logs":     60,   # 1 dakika
     "get_file_content":    1800,   # 30 dakika
+    "list_user_repos":     3600,   # 1 saat
 }
 ```
 
