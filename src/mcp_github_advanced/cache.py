@@ -40,6 +40,7 @@ TTL: dict[str, int] = {
     "list_issues": 300,            # 5 dakika
     "create_issue": 0,             # önbellek yok — yazma işlemi
     "get_workflow_runs": 300,      # 5 dakika
+    "list_user_repos": 3600,       # 1 saat
 }
 
 DEFAULT_TTL = 300  # 5 dakika varsayılan
