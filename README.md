@@ -15,13 +15,13 @@ Built for AI assistants and LangChain/LangGraph agents using the [Model Context 
 
 | Category | Tools | Description |
 |----------|-------|-------------|
-| 📁 **Repo** | `get_repo_info`, `get_file_content`, `list_repo_files`, `search_code` | Repository metadata, file contents, directory tree, code search |
+| 📁 **Repo** | `list_user_repos`, `get_repo_info`, `get_file_content`, `list_repo_files`, `search_code` | User profiles, repository metadata, file contents, directory tree, code search |
 | 📝 **Commit** | `list_commits`, `get_commit_diff`, `get_contributor_stats` | Commit history, diffs, contributor statistics |
 | 🔀 **PR** | `list_pull_requests`, `get_pr_diff`, `create_pr_review` | PR management and AI-powered code reviews |
 | 🐛 **Issue** | `list_issues`, `create_issue` | Issue tracking and creation |
 | ⚙️ **CI/CD** | `get_workflow_runs`, `get_workflow_logs` | GitHub Actions monitoring and log analysis |
 
-**14 tools** in total, all with:
+**15 tools** in total, all with:
 - 🔒 Versioned API headers (`X-GitHub-Api-Version: 2022-11-28`)
 - ⚡ Redis caching with intelligent TTL strategy
 - 🔄 Automatic retry with exponential backoff
@@ -140,9 +140,10 @@ Bu server, standart bir stdio altyapısı kullanarak JSON-RPC 2.0 mimarisini des
 
 ## 🤖 AI HR Assistant (9-Agent Multi-Agent System)
 
-Bu repo sadece bir MCP sunucusu olmakla kalmaz, aynı zamanda bu sunucuyu kullanan **gelişmiş bir İK (HR) Aday İnceleme Ajanı** barındırır. `src/main.py` üzerinden çalıştırılan bu sistem, bir GitHub reposunu **9 farklı sanal uzman** ile analiz eder:
+Bu repo sadece bir MCP sunucusu olmakla kalmaz, aynı zamanda bu sunucuyu kullanan **gelişmiş bir İK (HR) Aday İnceleme Ajanı** barındırır. `src/main.py` ve `src/api/main.py` üzerinden çalışan bu sistem, bir GitHub profilini **10 (9+1) farklı sanal uzman** ile analiz eder:
 
-1. **Repo Explorer:** Proje haritasını çıkarır.
+1. **Agent 0 (Smart Profiler):** `repo_name` girilmediğinde adayın tüm profilini tarayıp en kaliteli projesini seçer.
+2. **Repo Explorer:** Proje haritasını çıkarır.
 2. **Dependency Analyst:** Kullanılan teknolojileri ve kütüphaneleri bulur.
 3. **Architecture Reviewer:** Temiz mimari (Clean Architecture/MVC vb.) kullanımını inceler.
 4. **Code Quality Inspector:** Kod okunabilirliğini ve SOLID prensiplerini denetler.
