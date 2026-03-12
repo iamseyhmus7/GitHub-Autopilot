@@ -11,10 +11,10 @@ analiz edebilir, PR/Issue yönetimi yapabilir, CI/CD durumunu izleyebilir
 ve otomatik code review yazabilir.
 
 Bu server bir **web uygulamasının backend'i** olarak tasarlanmıştır:
-- Frontend: Next.js / React
-- Backend: FastAPI
-- Agent: LangChain + LangGraph
-- LLM: **Google Gemini Flash** (`gemini-2.0-flash`)
+- Frontend: Next.js / React (FAZ 3-4 Planlanıyor)
+- Backend: FastAPI (Yakında)
+- Agent: **LangChain + LangGraph (9-Agent HR Sistemi Aktif)**
+- LLM: **Google Gemini Flash** (`gemini-2.5-flash`)
 - MCP: mcp-github-advanced (bu proje)
 
 ---
@@ -53,6 +53,18 @@ Bu server bir **web uygulamasının backend'i** olarak tasarlanmıştır:
 │  TTL: repo_info=1saat, commits=5dk      │
 └─────────────────────────────────────────┘
 ```
+
+---
+
+## 🤖 AI Ajan Mimarisi (LangGraph 9-Agent HR) 
+
+`src/main.py` ve `src/multi_agent.py` içindeki sistem **9 adet ajan düğümü (node)** barındırır.
+Sırasıyla: (1) Repo Explorer, (2) Dependency Analyst, (3) Architecture Reviewer, (4) Code Quality Inspector, (5) Security Agent, (6) Git Historian, (7) DevOps Evaluator, (8) PR Manager, (9) HR Synthesizer.
+
+**LangGraph Optimizasyon Kuralları (Maliyet Koruma):**
+1. **Tool Filtering (Araç Filtreleme):** Tüm araçlar (14 şema) ajana YÜKLENMEMELİDİR. `allowed_tools=["search_code"]` argümanıyla sadece ilgili araçlar LLM'ye iletilir.
+2. **Context Memory Bloat Koruması:** `HRGraphState` kullanılırken `checkpointer` (SqliteSaver) eski mülakatları hatırlamaması için `thread_id` değerleri **her yeni aday analizinde UUID ile benzersiz (unique)** üretilmelidir. (Örn: `hr_session_{owner}_{repo}_{uuid.uuid4().hex[:8]}`)
+3. **Iteration Limit:** Ajanların takılıp kalmaması için LLM döngülerinde `max_iterations=2` sınırı tavsiye edilir.
 
 ---
 
@@ -364,14 +376,14 @@ security: token/auth güvenlik düzeltmesi
 
 ## 🤖 LLM — Google Gemini Flash
 
-**Model:** `gemini-2.0-flash`
+**Model:** `gemini-2.5-flash`
 
 ```python
 # LangChain entegrasyonu — bu şekilde kullan
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     google_api_key=os.getenv("GOOGLE_API_KEY"),
     temperature=0,
     max_tokens=8192,
