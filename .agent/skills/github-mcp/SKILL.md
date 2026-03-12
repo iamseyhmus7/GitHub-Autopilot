@@ -15,7 +15,7 @@ Bu beceri, `mcp-github-advanced` MCP sunucu kod tabanı ile çalışmak için ta
 - **GitHub GraphQL v4** — katkıda bulunan istatistikleri, karmaşık sorgular
 - **Redis önbellekleme** — akıllı TTL stratejisi ile
 - **PAT + OAuth 2.0** — çift kimlik doğrulama desteği
-- **LLM entegrasyonu** — `gemini-2.0-flash` ve `langchain-google-genai` ile
+- **LLM entegrasyonu** — `gemini-2.5-flash` ve `langchain-google-genai` ile
 
 ## Mimari
 
@@ -70,7 +70,7 @@ server.py  →  14 MCP aracı (list_tools + call_tool)
 
 ### 6. LLM
 
-- Model: `gemini-2.0-flash`
+- Model: `gemini-2.5-flash`
 - `temperature=0` — tutarlı kod analizi için
 - `max_tokens=8192`
 - Paket: `langchain-google-genai`

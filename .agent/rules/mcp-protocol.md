@@ -55,7 +55,7 @@ def main() -> None:
 
 ## LLM Entegrasyonu
 
-- Model: `gemini-2.0-flash` — `langchain-google-genai` paketi ile
+- Model: `gemini-2.5-flash` — `langchain-google-genai` paketi ile
 - `temperature=0` — tutarlı kod analizi için
 - `max_tokens=8192` çıktı limiti
 - Araç çıktıları bu limitin içinde kalmalıdır
