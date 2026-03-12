@@ -9,7 +9,7 @@ Bu beceri, `mcp-github-advanced` MCP sunucu kod tabanı ile çalışmak için ta
 
 ## Genel Bakış
 
-`mcp-github-advanced`, Model Context Protocol üzerinden 14 GitHub API aracını sunan bir MCP sunucusudur. Desteklediği özellikler:
+`mcp-github-advanced`, Model Context Protocol üzerinden 15 GitHub API aracını sunan bir MCP sunucusudur. Desteklediği özellikler:
 
 - **GitHub REST API v3** — repolar, commit'ler, PR'lar, issue'lar, actions
 - **GitHub GraphQL v4** — katkıda bulunan istatistikleri, karmaşık sorgular
@@ -20,7 +20,7 @@ Bu beceri, `mcp-github-advanced` MCP sunucu kod tabanı ile çalışmak için ta
 ## Mimari
 
 ```
-server.py  →  14 MCP aracı (list_tools + call_tool)
+server.py  →  15 MCP aracı (list_tools + call_tool)
   ├── github.py  →  REST + GraphQL istemcisi (httpx async)
   ├── auth.py    →  PAT + OAuth 2.0 kimlik doğrulama
   └── cache.py   →  TTL stratejili Redis önbellekleme
@@ -60,6 +60,7 @@ server.py  →  14 MCP aracı (list_tools + call_tool)
 | `get_pr_diff` | 10 dk |
 | `get_workflow_logs` | 1 dk |
 | `get_file_content` | 30 dk |
+| `list_user_repos` | 1 saat |
 | Yazma işlemleri | Önbellek yok |
 
 ### 5. Test Etme
@@ -86,7 +87,7 @@ server.py  →  14 MCP aracı (list_tools + call_tool)
 
 | Dosya | Amacı |
 |-------|-------|
-| `server.py` | MCP sunucusu, 14 araç tanımı, yönlendirici |
+| `server.py` | MCP sunucusu, 15 araç tanımı, yönlendirici |
 | `github.py` | GitHub API istemcisi (REST + GraphQL) |
 | `auth.py` | PAT + OAuth 2.0 kimlik doğrulama |
 | `cache.py` | TTL'li Redis önbellekleme |
