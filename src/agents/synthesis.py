@@ -10,7 +10,7 @@ async def hr_synthesizer_node(state: HRGraphState):
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
         temperature=0, 
-        max_tokens=1024
+        max_tokens=4096
     )
     
     # Bütün uzmanlardan gelen devasa veriyi İK için süzüyoruz
