@@ -66,6 +66,27 @@ TOOLS: list[Tool] = [
     #  📁 REPO ARAÇLARI — Repo bilgisi, dosya içeriği, dizin ağacı, kod arama
     # ──────────────────────────────────────────────────────────────────
     Tool(
+        name="list_user_repos",
+        description="Bir kullanıcının tüm genel repolarını listeler (isim, açıklama, yıldız sayısı, dil)",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "username": {"type": "string", "description": "GitHub kullanıcı adı"},
+                "per_page": {
+                    "type": "integer",
+                    "description": "Sayfa başına kaç repo (varsayılan: 100)",
+                    "default": 100,
+                },
+                "sort": {
+                    "type": "string",
+                    "description": "Sıralama: created, updated, pushed, full_name (varsayılan: updated)",
+                    "default": "updated",
+                },
+            },
+            "required": ["username"],
+        },
+    ),
+    Tool(
         name="get_repo_info",
         description="Repo meta verilerini getirir: yıldız, fork, dil, boyut, konular",
         inputSchema={
@@ -373,6 +394,10 @@ async def _dispatch(gh: GitHubClient, name: str, args: dict) -> object:
 
     match name:
         # ── 📁 Repo Araçları ──
+        case "list_user_repos":
+            return await gh.list_user_repos(
+                args["username"], args.get("per_page", 100), args.get("sort", "updated")
+            )
         case "get_repo_info":
             return await gh.get_repo_info(owner, repo)
         case "get_file_content":
