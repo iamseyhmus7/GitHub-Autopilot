@@ -138,6 +138,35 @@ class GitHubClient:
     #  📁 Repo Araçları
     # ──────────────────────────────────────────────────────────────────
 
+    async def list_user_repos(
+        self, username: str, per_page: int = 100, sort: str = "updated"
+    ) -> list[dict]:
+        """GET /users/{username}/repos — kullanıcının tüm genel repolarını listeler."""
+        if self.cache:
+            cached = await self.cache.get(username, "repos", "list_user_repos", extra=sort)
+            if cached:
+                return cached
+
+        resp = await self._get(
+            f"{GITHUB_API}/users/{username}/repos",
+            params={"per_page": per_page, "sort": sort},
+        )
+        repos = [
+            {
+                "name": r["name"],
+                "description": r.get("description"),
+                "stargazers_count": r.get("stargazers_count", 0),
+                "fork": r.get("fork", False),
+                "language": r.get("language"),
+                "updated_at": r.get("updated_at"),
+            }
+            for r in resp.json()
+        ]
+
+        if self.cache:
+            await self.cache.set(username, "repos", "list_user_repos", repos, extra=sort)
+        return repos
+
     async def get_repo_info(self, owner: str, repo: str) -> dict:
         """GET /repos/{owner}/{repo} — repo meta verileri (yıldız, fork, dil vb.)."""
         if self.cache:
