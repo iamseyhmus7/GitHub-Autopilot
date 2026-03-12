@@ -138,6 +138,33 @@ Bu server, standart bir stdio altyapısı kullanarak JSON-RPC 2.0 mimarisini des
 
 ---
 
+## 🤖 AI HR Assistant (9-Agent Multi-Agent System)
+
+Bu repo sadece bir MCP sunucusu olmakla kalmaz, aynı zamanda bu sunucuyu kullanan **gelişmiş bir İK (HR) Aday İnceleme Ajanı** barındırır. `src/main.py` üzerinden çalıştırılan bu sistem, bir GitHub reposunu **9 farklı sanal uzman** ile analiz eder:
+
+1. **Repo Explorer:** Proje haritasını çıkarır.
+2. **Dependency Analyst:** Kullanılan teknolojileri ve kütüphaneleri bulur.
+3. **Architecture Reviewer:** Temiz mimari (Clean Architecture/MVC vb.) kullanımını inceler.
+4. **Code Quality Inspector:** Kod okunabilirliğini ve SOLID prensiplerini denetler.
+5. **Security Agent:** Hardcoded şifreleri veya güvenlik zaaflarını tarar.
+6. **Git Historian:** Commit geçmişini inceleyip projenin kopyala-yapıştır olup olmadığını teyit eder.
+7. **DevOps Evaluator:** CI/CD süreçlerini ve Unit Test'leri kontrol eder.
+8. **PR Manager:** Takım çalışması, Issue ve Branch kullanımını değerlendirir.
+9. **HR Synthesizer:** Tüm bu teknik raporları harmanlayıp, teknik olmayan İK profesyonelleri için "Puanlı Aday Skor Kartı" çıkarır.
+
+**Performans & Optimizasyon:**
+- LangGraph kullanılarak inşa edilmiştir.
+- Her ajan **sadece uzmanlık alanına giren MCP araçlarına** filtreli şekilde erişir (Context Optimizasyonu).
+- Global bir AIO Sqlite Checkpointer kullanılarak, farklı mülakat oturumları (`thread_id`) kalıcı hafızada tutulur.
+- Tek bir Github profil analizi ortalama *15 API İsteği* ve *71.000 Token* maliyeti ile (son derece optimize edilmiş olarak) tamamlanır.
+
+**Çalıştırmak için:**
+```bash
+python src/main.py
+```
+
+---
+
 ## 🛠️ Usage Examples
 
 Once connected to an MCP client, you can use natural language:
