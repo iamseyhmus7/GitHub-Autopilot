@@ -187,7 +187,7 @@ Once connected to an MCP client, you can use natural language:
 ```
 ┌──────────────────────────────────────────┐
 │              server.py                    │
-│         14 MCP Tools (list_tools)        │
+│         15 MCP Tools (list_tools)        │
 │         call_tool() dispatcher           │
 └──────────────┬───────────────────────────┘
                │
