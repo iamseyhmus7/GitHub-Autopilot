@@ -5,7 +5,8 @@ from langchain_core.messages import BaseMessage
 class HRGraphState(TypedDict):
     # Girdi Verileri (Başlangıçta verilecek)
     github_owner: str
-    repo_name: str
+    repo_name: str # Ana analiz odağı (Şampiyon Proje)
+    relevant_repos: List[str] # İncelemeye dahil edilen tüm ilgili projeler
     job_description: str # İK'nın aradığı kriterler
     
     # İletişim & Hafıza
