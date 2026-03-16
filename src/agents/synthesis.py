@@ -15,31 +15,43 @@ async def hr_synthesizer_node(state: HRGraphState):
     
     # Bütün uzmanlardan gelen devasa veriyi İK için süzüyoruz
     sys_prompt = f"""Sen 'HR Synthesizer' ajanısın (Baş İK Yöneticisi). 
-Aşağıda 8 farklı teknik uzmandan gelen detaylı {state['github_owner']}/{state['repo_name']} Github Aday Analiz Raporları bulunuyor.
+Adayın seçilmiş projelerinden gelen teknik verileri sentezleyerek 'Nihai Teknik DNA Analiz Raporu' oluşturmalısın.
+
+Analiz Kapsamı (Tüm İlgili Projeler): {', '.join(state['relevant_repos'])}
+Ana Teknik Odak (Derinlemesine İncelenen): {state['repo_name']}
     
 İş İlanı Gereksinimleri: {state['job_description']}
 
 Teknik Ajanlardan Gelen Raporlar:
-- Proje Özeti: {state.get('repo_overview')}
-- Teknoloji Yığını: {state.get('tech_stack')}
-- Mimari Analiz: {state.get('architecture_analysis')}
-- Kod Kalitesi: {state.get('code_quality_report')}
-- Güvenlik: {state.get('security_report')}
-- Git Geçmişi & Emek: {state.get('commit_history_analysis')}
-- Test & CI/CD: {state.get('ci_cd_testing_status')}
-- Ekip/PR Yönetimi: {state.get('teamwork_pr_analysis')}
+1. Proje Özetleri (Geniş Perspektif): {state.get('repo_overview')}
+2. Teknoloji Yığını (Tüm Projeler): {state.get('tech_stack')}
+3. Derinlemesine Mimari Analiz: {state.get('architecture_analysis')}
+4. Kod Kalitesi Raporu: {state.get('code_quality_report')}
+5. Güvenlik Denetimi: {state.get('security_report')}
+6. Emek & Geçmiş: {state.get('commit_history_analysis')}
+7. DevOps & Süreç: {state.get('ci_cd_testing_status')}
+8. İşbirliği & PR: {state.get('teamwork_pr_analysis')}
 
-Görevin: Bu devasa ve teknik verileri süz, harmanla ve kesinlikle TEKNİK OLMAYAN BİR İK UZMANININ anlayacağı sade, net, profesyonel BİR 'Nihai Aday Skor Kartı' çıkar.
+Görevin: Bu verileri harmanlayarak adayın hem geniş teknik spektrumunu (relevant_repos) hem de derinlemesine teknik becerilerini (repo_name) profesyonelce raporla.
 
-ŞU FORMATTA OLMALI:
-1. 🌟 Aday Özeti: (1-2 Cümle)
-2. 🎯 İşe Uygunluk Skoru: (100 üzerinden, İş İlanı Kriterlerine göre)
-3. ✅ Artılar (Green Flags): 
-4. ⚠️ Eksiler/Uyarılar (Red Flags): (Örn: kopya şüphesi varsa kesin uyar)
-5. ⚖️ Nihai Karar: (Mülakata Çağrılmalı mı, Neden?)
-6. 🗣️ Mülakatta Sorulacak 3 Teknik/Süreç Sorusu: (Adayı köşeye sıkıştırmak veya tebrik etmek için)
+RAPOR FORMATI (BU KURALA KESİNLİKLE UY):
+# 🧬 Teknik DNA Analiz Raporu
 
-Rapor dilin ikna edici, Türkçe ve son derece profesyonel olmalıdır."""
+1. 🌟 Aday Özeti: (Kısa ve öz, tüm projeler dahi ederek)
+2. 🎯 Genel İşe Uygunluk: %X (İş ilanına göre yüzde ver)
+3. 📊 Teknik Karnesi (Aşağıdaki etiketleri KESİNLİKLE satır başında kullan):
+   - [MİMARİ_PUAN: XX]
+   - [GÜVENLİK_PUAN: XX]
+   - [KOD_KALİTESİ_PUAN: XX]
+   - [DEVOPS_PUAN: XX]
+   - [DOKÜMANTASYON_PUAN: XX]
+
+4. 🛠️ Teknik Gen Haritası (Kullandığı güçlü araçlar ve frameworkler)
+5. ✅ Teknik Artılar (Green Flags)
+6. ⚠️ Tespit Edilen Riskler (Red Flags)
+7. 🗣️ Mülakat İçin Kritik Sorular (Adayın zayıf noktalarını test edecek 3 soru)
+
+Rapor dili Türkçe ve son derece profesyonel olmalıdır."""
 
     messages = [
         SystemMessage(content=sys_prompt),
