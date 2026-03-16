@@ -31,6 +31,7 @@ Teknik Ajanlardan Gelen Raporlar:
 6. Emek & Geçmiş: {state.get('commit_history_analysis')}
 7. DevOps & Süreç: {state.get('ci_cd_testing_status')}
 8. İşbirliği & PR: {state.get('teamwork_pr_analysis')}
+9. Geçmişle Karşılaştırma (Bellek): {state.get('historical_analysis')}
 
 Görevin: Bu verileri harmanlayarak adayın hem geniş teknik spektrumunu (relevant_repos) hem de derinlemesine teknik becerilerini (repo_name) profesyonelce raporla.
 

@@ -40,25 +40,43 @@ async def run_agent_loop(llm_with_tools, tools, messages, max_iterations=2):
         messages.append(response)
         
         # Token takibi (Gemini metadata'dan)
-        if response.usage_metadata:
+        if hasattr(response, "usage_metadata") and response.usage_metadata:
             node_tokens += response.usage_metadata.get("total_tokens", 0)
             
         if not response.tool_calls:
             return response.content, node_tokens, node_tool_calls
             
-        for tool_call in response.tool_calls:
+        # SADECE İLK 5 ARAÇ ÇAĞRISINI İŞLE (Hız için limit koyuyoruz)
+        limited_tool_calls = response.tool_calls[:5]
+        if len(response.tool_calls) > 5:
+            print(f"    [!] Çok fazla araç çağrısı ({len(response.tool_calls)}), ilk 5'i işleniyor...")
+            
+        for tool_call in limited_tool_calls:
             node_tool_calls += 1
             print(f"  [Ajan Araç Kullanıyor] {tool_call['name']}")
-            tool = next(t for t in tools if t.name == tool_call["name"])
-            tool_msg = await tool.ainvoke(tool_call)
-            messages.append(tool_msg)
+            try:
+                tool = next(t for t in tools if t.name == tool_call["name"])
+                tool_msg = await tool.ainvoke(tool_call)
+                
+                # --- TOKENS BLOAT KORUMASI ---
+                MAX_CHARS = 15000
+                if len(tool_msg.content) > MAX_CHARS:
+                    print(f"    [!] Araç çıktısı çok büyük ({len(tool_msg.content)} karakter), kırpılıyor...")
+                    tool_msg.content = tool_msg.content[:MAX_CHARS] + "\n\n[ÇIKTI ÇOK UZUN OLDUĞU İÇİN KIRPILDI.]"
+                
+                messages.append(tool_msg)
+            except Exception as e:
+                error_msg = repr(e)
+                print(f"    [!] KRİTİK ARAÇ HATASI ({tool_call['name']}): {error_msg}")
+                from langchain_core.messages import ToolMessage
+                messages.append(ToolMessage(content=f"Error in {tool_call['name']}: {error_msg}", tool_call_id=tool_call["id"]))
             
         iterations += 1
         
-    messages.append(HumanMessage(content="Maliyet limiti aşıldı! Şu ana kadar bulduğun verilerle analizini tamamla."))
+    messages.append(HumanMessage(content="Maliyet ve zaman limiti doldu. Eldeki verilerle en iyi analizini yap ve bitir."))
     final_resp = await llm_with_tools.ainvoke(messages)
     
-    if final_resp.usage_metadata:
+    if hasattr(final_resp, "usage_metadata") and final_resp.usage_metadata:
         node_tokens += final_resp.usage_metadata.get("total_tokens", 0)
         
     return final_resp.content, node_tokens, node_tool_calls

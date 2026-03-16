@@ -22,9 +22,9 @@ async def architecture_reviewer_node(state: HRGraphState):
 async def code_quality_inspector_node(state: HRGraphState):
     """Ajan 4: Kod Kalite Müfettişi"""
     print("🤖 [Ajan 4] Code Quality Inspector (Kod Kalite Müfettişi) devrede...")
-    llm_with_tools, tools = await get_agent_llm(allowed_tools=["list_repo_files", "get_file_content", "search_code"])
+    llm_with_tools, tools = await get_agent_llm(allowed_tools=["list_repo_files", "get_file_content"])
     sys_prompt = create_agent_prompt(
-        "Sen 'Code Quality Inspector' ajanısın. Görevin kaynak kod dosyalarının (örn: .java, .js) içine girerek Clean Code (Temiz Kod), SOLID prensipleri, isimlendirme standartları ve fonksiyon boyutlarını acımasızca eleştirmektir. Aday temiz ve okunabilir kod yazmış mı? Lütfen 1-2 dosya açıp bak.",
+        "Sen 'Code Quality Inspector' ajanısın. Görevin kaynak kod dosyalarının (örn: .java, .js) içine girerek Clean Code (Temiz Kod), SOLID prensipleri, isimlendirme standartları ve fonksiyon boyutlarını incelemektir. Aday temiz ve okunabilir kod yazmış mı?",
         state["github_owner"], state["repo_name"], state["job_description"]
     )
     messages = [SystemMessage(content=sys_prompt), HumanMessage(content="Lütfen önemli kaynak kodlarını bulup Kod Kalite (Code Quality) raporu çıkar.")]
@@ -39,12 +39,20 @@ async def code_quality_inspector_node(state: HRGraphState):
 async def security_agent_node(state: HRGraphState):
     """Ajan 5: Güvenlik Uzmanı"""
     print("🤖 [Ajan 5] Security Agent (Güvenlik Uzmanı) devrede...")
-    llm_with_tools, tools = await get_agent_llm(allowed_tools=["search_code"])
+    # 'search_code' kaldırıldı çünkü GitHub üzerinde çok yavaş çalışıyor ve hızı baltalıyor.
+    # Bunun yerine 'Targeted Discovery' için listeleme ve okuma veriyoruz.
+    llm_with_tools, tools = await get_agent_llm(allowed_tools=["list_repo_files", "get_file_content"])
+    
     sys_prompt = create_agent_prompt(
-        "Sen 'Security Agent' ajanısın. Görevin kod tabanında unutulmuş API anahtarları (API keys), hardcoded şifreler (passwords) veya bilinen güvenlik zaaflarını (örn: SQL injection riskleri) search_code aracı ile aramaktır. Hiçbir sorun yoksa temiz raporu ver.",
+        "Sen 'Security Agent' ajanısın. Görevin kod tabanındaki güvenlik risklerini analiz etmektir.\n\n"
+        "STRATEJİ (HIZ KRİTİKTİR):\n"
+        "1. 'list_repo_files' ile dosya yapısına bak. Kritik dosyaları (.env, config, settings, auth vb.) hemen belirle.\n"
+        "2. Bu dosyaları 'get_file_content' ile oku.\n"
+        "3. Hardcoded şifreler, API anahtarları veya bariz SQL injection risklerini hızlıca raporla.\n"
+        "Geniş çaplı kod araması yapma, sadece kritik dosyalara odaklan.",
         state["github_owner"], state["repo_name"], state["job_description"]
     )
-    messages = [SystemMessage(content=sys_prompt), HumanMessage(content="Lütfen hardcoded şifreler veya güvenlik zafiyetleri için kod taraması yap.")]
+    messages = [SystemMessage(content=sys_prompt), HumanMessage(content="Lütfen en kilit dosyalar üzerinden hızlıca güvenlik taraması gerçekleştir.")]
     res, tokens, tool_calls = await run_agent_loop(llm_with_tools, tools, messages)
     return {
         "security_report": res, 
