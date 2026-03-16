@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mcp-github-advanced"
-version = "0.1.0"
+version = "0.1.1"
 description = "Advanced GitHub MCP server — repo analysis, PR management, code review, CI/CD monitoring"
 readme = "README.md"
 license = { text = "MIT" }
@@ -33,6 +33,9 @@ dependencies = [
     "langchain-google-genai>=2.0.0",
     "langchain>=0.3.0",
     "langgraph>=0.2.0",
+    "fpdf2>=2.8.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
 ]
 
 [project.optional-dependencies]
@@ -51,6 +54,9 @@ mcp-github-advanced = "mcp_github_advanced.server:main"
 Homepage   = "https://github.com/iamseyhmus7/mcp-github-advanced"
 Repository = "https://github.com/iamseyhmus7/mcp-github-advanced"
 Issues     = "https://github.com/iamseyhmus7/mcp-github-advanced/issues"
+
+[tool.hatch.build.targets.sdist]
+exclude = ["/frontend", "/tests", "/.gemini", ".env"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mcp_github_advanced"]
