@@ -19,10 +19,11 @@ const AGENTS = [
   { id: "dependency_analyst", name: "Dependency Analyst", icon: Package, description: "Harici kütüphaneleri ve güvenlik açıklarını inceler." },
   { id: "architecture_reviewer", name: "Architecture Reviewer", icon: Layers, description: "Sistem mimarisini ve modülerliğini değerlendirir." },
   { id: "code_quality", name: "Code Quality Inspector", icon: Code, description: "Kodun okunabilirliğini ve standartlara uyumunu ölçer." },
-  { id: "security_agent", name: "Security Sentinel", icon: ShieldCheck, description: "Gizli anahtarları ve potansiyel zafiyetleri tarar." },
+  { id: "security_agent", name: "Security Agent", icon: ShieldCheck, description: "Gizli anahtarları ve potansiyel zafiyetleri tarar." },
   { id: "git_historian", name: "Git Historian", icon: History, description: "Commit geçmişini ve ekip çalışma temposunu analiz eder." },
   { id: "devops_evaluator", name: "DevOps Evaluator", icon: Settings, description: "CI/CD süreçlerini ve deployment kalitesini kontrol eder." },
   { id: "pr_manager", name: "PR Manager", icon: GitPullRequest, description: "Pull Request kalitesini ve review süreçlerini inceler." },
+  { id: "history_analyzer", name: "History Analyzer", icon: History, description: "Adayın geçmiş başvurularını ve gelişimini karşılaştırır." },
   { id: "hr_synthesis", name: "HR Synthesizer", icon: Cpu, description: "Tüm analizleri birleştirip aday puanını belirler." },
 ];
 
