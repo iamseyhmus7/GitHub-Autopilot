@@ -27,6 +27,10 @@ export default function Home() {
   const [activeAgentId, setActiveAgentId] = useState<string | null>(null);
   const [completedAgents, setCompletedAgents] = useState<string[]>([]);
   const [scores, setScores] = useState<Record<string, number>>({});
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const [chatQuery, setChatQuery] = useState("");
+  const [chatAnswer, setChatAnswer] = useState<string | null>(null);
+  const [isChatLoading, setIsChatLoading] = useState(false);
   
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -113,6 +117,7 @@ export default function Home() {
                 }
               } else if (data.type === "system" || data.type === "error") {
                 setLogs((prev) => [...prev, data]);
+                if (data.thread_id) setThreadId(data.thread_id);
               }
             } catch (err) {
               console.error("Parse error:", err);
@@ -125,6 +130,31 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleChatSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatQuery || !threadId) return;
+
+    setIsChatLoading(true);
+    try {
+      const resp = await fetch("http://localhost:8000/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ thread_id: threadId, query: chatQuery }),
+      });
+      const data = await resp.json();
+      setChatAnswer(data.answer);
+    } catch (err) {
+      console.error("Chat error:", err);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    if (!threadId) return;
+    window.open(`http://localhost:8000/api/report/pdf/${threadId}`, "_blank");
   };
 
   return (
@@ -223,8 +253,14 @@ export default function Home() {
       {/* Results Section */}
       {finalReport && (
         <section ref={resultsRef} className={styles.resultsSection}>
-          <div className={styles.scoreSection}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
             <h2 className={styles.sectionTitle}>Teknik Yetkinlik Karnesi</h2>
+            <button onClick={handleDownloadPDF} className={styles.badge} style={{ cursor: 'pointer', background: 'rgba(0, 255, 136, 0.2)', border: '1px solid #00ff88' }}>
+              📄 PDF OLARAK İNDİR
+            </button>
+          </div>
+          
+          <div className={styles.scoreSection}>
             <TechnicalScoreBoard scores={scores} />
           </div>
 
@@ -240,6 +276,35 @@ export default function Home() {
             <div className={styles.markdownContent}>
               <ReactMarkdown>{finalReport}</ReactMarkdown>
             </div>
+          </motion.div>
+
+          {/* Chat Interface */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className={styles.reportCard}
+            style={{ marginTop: '2rem', border: '1px solid rgba(0, 149, 255, 0.3)' }}
+          >
+            <div className={styles.badge} style={{ background: 'rgba(0, 149, 255, 0.2)', color: '#0095ff', marginBottom: '1.5rem' }}>
+              🤖 Rapora Soru Sor
+            </div>
+            <form onSubmit={handleChatSubmit} style={{ display: 'flex', gap: '1rem' }}>
+              <input 
+                type="text" 
+                className={styles.input} 
+                placeholder="Örn: Bu adayın en zayıf olduğu teknik nokta nedir?"
+                value={chatQuery}
+                onChange={(e) => setChatQuery(e.target.value)}
+              />
+              <button type="submit" className={styles.button} style={{ width: 'auto', padding: '0 2rem' }} disabled={isChatLoading}>
+                {isChatLoading ? "..." : "Sor"}
+              </button>
+            </form>
+            {chatAnswer && (
+              <div className={styles.markdownContent} style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                <ReactMarkdown>{chatAnswer}</ReactMarkdown>
+              </div>
+            )}
           </motion.div>
         </section>
       )}
