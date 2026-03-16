@@ -32,3 +32,9 @@ htmlcov/
 .gemini/
 
 checkpoints.sqlite*
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+*.log
