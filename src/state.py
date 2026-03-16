@@ -30,7 +30,8 @@ class HRGraphState(TypedDict):
     ci_cd_testing_status: Optional[str]    # DevOps & Testing Evaluator'dan
     teamwork_pr_analysis: Optional[str]    # Issue & PR Manager'dan
     
-    # 4. BÖLÜM: SENTEZ
+    # 4. BÖLÜM: BELLEK & SENTEZ
+    historical_analysis: Optional[str]     # Geçmiş analizlerle karşılaştırma (Persistent Memory)
     final_hr_report: Optional[str]         # HR Synthesizer'dan çıkan Nihai Puan Kartı
     
     # Yönetimsel Durumlar
