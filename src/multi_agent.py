@@ -14,6 +14,7 @@ from src.agents.process import (
     devops_evaluator_node, 
     pr_manager_node
 )
+from src.agents.history import history_analyzer_node
 from src.agents.synthesis import hr_synthesizer_node
 
 def create_hr_graph(memory_db_path="checkpoints.sqlite"):
@@ -33,26 +34,32 @@ def create_hr_graph(memory_db_path="checkpoints.sqlite"):
     graph_builder.add_node("git_historian", git_historian_node)
     graph_builder.add_node("devops", devops_evaluator_node)
     graph_builder.add_node("pr_manager", pr_manager_node)
+    graph_builder.add_node("history_analyzer", history_analyzer_node)
     
     graph_builder.add_node("hr_synthesizer", hr_synthesizer_node)
 
-    # 3. Akışı (Edge/Bağlantıları) Çiz - Rate Limit yememek için sıralı yapıyoruz
-    # Faz 1: Keşif
+    # 3. Akışı Gerçek Zamanda Paralelleştir (Turbo Mode)
+    
+    # Faz 1: Keşif (Sıralı - Temel veriler için)
     graph_builder.add_edge(START, "repo_explorer")
     graph_builder.add_edge("repo_explorer", "dependency_analyst")
     
-    # Faz 2: Mühendislik
-    graph_builder.add_edge("dependency_analyst", "architecture_reviewer")
-    graph_builder.add_edge("architecture_reviewer", "code_quality")
-    graph_builder.add_edge("code_quality", "security")
+    # Faz 2: Paralel Analiz (Fan-out)
+    analysts = [
+        "architecture_reviewer", 
+        "code_quality", 
+        "security", 
+        "git_historian", 
+        "devops", 
+        "pr_manager",
+        "history_analyzer"
+    ]
     
-    # Faz 3: Kayıt & Süreç
-    graph_builder.add_edge("security", "git_historian")
-    graph_builder.add_edge("git_historian", "devops")
-    graph_builder.add_edge("devops", "pr_manager")
+    for analyst in analysts:
+        graph_builder.add_edge("dependency_analyst", analyst)
+        graph_builder.add_edge(analyst, "hr_synthesizer")
     
-    # Faz 4: Sentez & Karar
-    graph_builder.add_edge("pr_manager", "hr_synthesizer")
+    # Faz 3: Sentez & Karar (Tüm paralel işler bitince çalışır)
     graph_builder.add_edge("hr_synthesizer", END)
 
     # 4. Kalıcı Hafıza (SqliteSaver) ile Derle
