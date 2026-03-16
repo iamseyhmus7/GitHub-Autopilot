@@ -10,10 +10,13 @@ load_dotenv()
 
 from src.mcp_client import MCPConnectionManager
 from src.multi_agent import create_hr_graph
-from src.api.schemas import AnalysisRequest
-from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langchain_google_genai import ChatGoogleGenerativeAI
+from src.api.schemas import AnalysisRequest, ChatRequest
+from langchain_core.messages import HumanMessage
+from src.agents.qa_agent import run_qa_agent
+from fastapi.responses import FileResponse
+import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,7 +28,7 @@ async def lifespan(app: FastAPI):
         # Uygulama kapanırken MCP bağlantısı koparılır
         await MCPConnectionManager.close()
 
-app = FastAPI(title="AI HR Assistant API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="GitHub Autopilot API", version="1.0.0", lifespan=lifespan)
 
 # Frontend'lerin (Next.js vb.) istek atabilmesi için CORS izinleri
 app.add_middleware(
@@ -130,7 +133,8 @@ Adayın Repoları:
             async with AsyncSqliteSaver.from_conn_string("checkpoints.sqlite") as checkpointer:
                 langgraph_app = graph_builder.compile(checkpointer=checkpointer)
                 
-                yield f"data: {json.dumps({'type': 'system', 'message': '🕹️ Analiz Grafiği Derlendi. Akış Başlatılıyor...'}, ensure_ascii=False)}\n\n"
+                thread_id = config["configurable"]["thread_id"]
+                yield f"data: {json.dumps({'type': 'system', 'message': '🕹️ Analiz Grafiği Derlendi. Akış Başlatılıyor...', 'thread_id': thread_id}, ensure_ascii=False)}\n\n"
 
                 # astream() ile her bir ajan (node) işini bitirdikçe canlı veri fırlatılır
                 async for chunk in langgraph_app.astream(initial_state, config):
@@ -166,3 +170,70 @@ Adayın Repoları:
 
     # Header değerlerini SSE formatı için özel dönüyoruz
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+@app.post("/api/chat")
+async def chat_with_report(req: ChatRequest):
+    """
+    Rapor hakkında soru-cevap yapılmasını sağlayan endpoint.
+    """
+    DB_PATH = "checkpoints.sqlite"
+    async with AsyncSqliteSaver.from_conn_string(DB_PATH) as checkpointer:
+        config = {"configurable": {"thread_id": req.thread_id}}
+        checkpoint = await checkpointer.aget(config)
+        
+        if not checkpoint or "values" not in checkpoint:
+            return {"error": "Oturum bulunamadı veya analiz tamamlanmadı."}
+            
+        state = checkpoint["values"]
+        answer = await run_qa_agent(state, req.query)
+        
+        return {
+            "answer": answer,
+            "thread_id": req.thread_id
+        }
+
+@app.get("/api/report/pdf/{thread_id}")
+async def export_pdf(thread_id: str):
+    """
+    Analiz sonucunu PDF olarak dışa aktarır.
+    """
+    DB_PATH = "checkpoints.sqlite"
+    async with AsyncSqliteSaver.from_conn_string(DB_PATH) as checkpointer:
+        config = {"configurable": {"thread_id": thread_id}}
+        checkpoint = await checkpointer.aget(config)
+        
+        if not checkpoint or "values" not in checkpoint:
+            return {"error": "Rapor bulunamadı."}
+            
+        state = checkpoint["values"]
+        report_content = state.get("final_hr_report", "Rapor verisi bulunamadı.")
+        
+        # PDF Oluşturma (Geçici dosya)
+        from fpdf import FPDF
+        
+        class PDF(FPDF):
+            def header(self):
+                self.set_font('helvetica', 'B', 15)
+                self.cell(0, 10, 'Technical DNA Analysis Report', border=True, ln=True, align='C')
+                self.ln(5)
+
+            def footer(self):
+                self.set_y(-15)
+                self.set_font('helvetica', 'I', 8)
+                self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+
+        pdf = PDF()
+        pdf.add_page()
+        pdf.set_font("helvetica", size=12)
+        
+        # Basitçe markdown'ı temizleyip PDF'e yazıyoruz (Daha gelişmiş bir parser eklenebilir)
+        clean_text = report_content.replace("#", "").replace("*", "").replace("`", "")
+        
+        # Encoding sorunu yaşamamak için latin-1'e uygun hale getiriyoruz veya unicode ayarı yapıyoruz
+        # Şimdilik en basit haliyle:
+        pdf.multi_cell(0, 10, clean_text)
+        
+        file_path = f"report_{thread_id}.pdf"
+        pdf.output(file_path)
+        
+        return FileResponse(file_path, filename=f"DNA_Report_{thread_id}.pdf", background=asyncio.create_task(asyncio.sleep(10)).add_done_callback(lambda _: os.remove(file_path) if os.path.exists(file_path) else None))
