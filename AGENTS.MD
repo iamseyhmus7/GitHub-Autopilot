@@ -11,9 +11,9 @@ analiz edebilir, PR/Issue yönetimi yapabilir, CI/CD durumunu izleyebilir
 ve otomatik code review yazabilir.
 
 Bu server bir **web uygulamasının backend'i** olarak tasarlanmıştır:
-- Frontend: Next.js / React (FAZ 3-4 Planlanıyor)
-- Backend: FastAPI (Yakında)
-- Agent: **LangChain + LangGraph (9-Agent HR Sistemi Aktif)**
+- Frontend: **Next.js / React** (Aktif — Premium Dark UI)
+- Backend: **FastAPI** (Aktif — SSE Streaming + REST API)
+- Agent: **LangChain + LangGraph (10+1 Agent HR Sistemi Aktif — Paralel Fan-out/Fan-in)**
 - LLM: **Google Gemini Flash** (`gemini-2.5-flash`)
 - MCP: mcp-github-advanced (bu proje)
 
@@ -56,15 +56,46 @@ Bu server bir **web uygulamasının backend'i** olarak tasarlanmıştır:
 
 ---
 
-## 🤖 AI Ajan Mimarisi (LangGraph 9-Agent HR) 
+## 🤖 AI Ajan Mimarisi (LangGraph 10+1 Agent HR — Paralel)
 
-`src/main.py` ve `src/multi_agent.py` içindeki sistem **9 adet ajan düğümü (node)** barındırır.
-Sırasıyla: (1) Repo Explorer, (2) Dependency Analyst, (3) Architecture Reviewer, (4) Code Quality Inspector, (5) Security Agent, (6) Git Historian, (7) DevOps Evaluator, (8) PR Manager, (9) HR Synthesizer.
+`src/main.py`, `src/multi_agent.py` ve `src/api/main.py` içindeki sistem **10+1 ajan düğümü (node)** barındırır.
+
+### Ajan Listesi
+| # | Ajan | Dosya | Görev |
+|---|------|-------|-------|
+| 0 | **Smart Profiler** | `api/main.py` | İş ilanına en uygun projeyi seçer (repo_name boşsa) |
+| 1 | Repo Explorer | `agents/discovery.py` | Proje haritası, kritik dosyalar |
+| 2 | Dependency Analyst | `agents/discovery.py` | Teknoloji yığını ve kütüphane analizi |
+| 3 | Architecture Reviewer | `agents/engineering.py` | Mimari kalıp tespiti (MVC, Clean vb.) |
+| 4 | Code Quality Inspector | `agents/engineering.py` | SOLID, okunabilirlik, kod gözden geçirme |
+| 5 | Security Agent | `agents/engineering.py` | Hardcoded secret ve zafiyet taraması |
+| 6 | Git Historian | `agents/process.py` | Kopya/gerçek emek, commit analizi |
+| 7 | DevOps Evaluator | `agents/process.py` | CI/CD, test altyapısı |
+| 8 | PR Manager | `agents/process.py` | Branch, PR, issue kullanım kalitesi |
+| 9 | History Analyzer | `agents/history.py` | Geçmiş analizlerle karşılaştırma (Kalıcı Bellek) |
+| 10 | HR Synthesizer | `agents/synthesis.py` | Nihai İK Skor Kartı + Mülakat Soruları |
+| — | Q&A Agent | `agents/qa_agent.py` | Rapor hakkında soru-cevap (bağımsız) |
+
+### Paralel Çalışma Grafiği (Fan-out / Fan-in)
+```
+START ──▶ repo_explorer ──▶ dependency_analyst ──┬──▶ architecture_reviewer ──┐
+                                                  ├──▶ code_quality ──────────┤
+                                                  ├──▶ security ─────────────┤
+                                                  ├──▶ git_historian ─────────┤
+                                                  ├──▶ devops ────────────────┤
+                                                  ├──▶ pr_manager ────────────┤
+                                                  └──▶ history_analyzer ──────┘
+                                                                              │
+                                                                              ▼
+                                                                       hr_synthesizer ──▶ END
+```
 
 **LangGraph Optimizasyon Kuralları (Maliyet Koruma):**
-1. **Tool Filtering (Araç Filtreleme):** Tüm araçlar (14 şema) ajana YÜKLENMEMELİDİR. `allowed_tools=["search_code"]` argümanıyla sadece ilgili araçlar LLM'ye iletilir.
+1. **Tool Filtering (Araç Filtreleme):** Tüm araçlar (15 şema) ajana YÜKLENMEMELİDİR. `allowed_tools=["search_code"]` argümanıyla sadece ilgili araçlar LLM'ye iletilir.
 2. **Context Memory Bloat Koruması:** `HRGraphState` kullanılırken `checkpointer` (SqliteSaver) eski mülakatları hatırlamaması için `thread_id` değerleri **her yeni aday analizinde UUID ile benzersiz (unique)** üretilmelidir. (Örn: `hr_session_{owner}_{repo}_{uuid.uuid4().hex[:8]}`)
 3. **Iteration Limit:** Ajanların takılıp kalmaması için LLM döngülerinde `max_iterations=2` sınırı tavsiye edilir.
+4. **Timeout Koruması:** LLM çağrıları için **90 saniyelik**, araç (tool) çağrıları için **45 saniyelik** zaman sınırı uygulanır. Takılma (hang) riski ortadan kaldırılır.
+5. **Global Tool Semaphore:** Paralel ajanlar aynı anda MCP aracı çağırabilir. `asyncio.Semaphore` ile eşzamanlı araç çağrısı sayısı sınırlanarak race condition önlenir.
 
 ---
 
@@ -82,6 +113,13 @@ Sırasıyla: (1) Repo Explorer, (2) Dependency Analyst, (3) Architecture Reviewe
 | Test | `pytest` + `pytest-asyncio` | ≥8.3.0 | Async test |
 | Mock | `respx` | ≥0.21.0 | HTTP mock |
 | Linter | `ruff` | ≥0.8.0 | Hızlı linter |
+| Web API | `fastapi` | latest | SSE Streaming + REST |
+| Agent Orchestration | `langgraph` | latest | Paralel multi-agent graf |
+| LLM | `langchain-google-genai` | latest | Gemini 2.5 Flash entegrasyonu |
+| PDF | `fpdf2` | latest | DNA Rapor PDF dışa aktarımı |
+| Frontend | `next.js` + `react` | 15.x | Premium İK Dashboard |
+| Animasyon | `framer-motion` | latest | Mikro-animasyonlar |
+| Markdown | `react-markdown` | latest | Rapor render |
 
 ---
 
@@ -94,15 +132,47 @@ mcp-github-advanced/
 ├── smithery.yaml                      ← Smithery.ai deployment
 ├── pyproject.toml                     ← Paket tanımı
 ├── .env.example                       ← Ortam değişkenleri
+├── checkpoints.sqlite                 ← LangGraph kalıcı hafıza DB
 │
 ├── src/
-│   └── mcp_github_advanced/
-│       ├── __init__.py                ← __version__ = "0.1.0"
+│   ├── main.py                        ← CLI giriş noktası (tek analiz)
+│   ├── mcp_client.py                  ← MCP bağlantı yöneticisi
+│   ├── multi_agent.py                 ← LangGraph paralel graf yapısı
+│   ├── state.py                       ← HRGraphState (TypedDict şeması)
+│   │
+│   ├── agents/                        ← 10+1 Ajan Modülleri
+│   │   ├── discovery.py               ← Ajan 1-2: Repo Explorer + Dependency Analyst
+│   │   ├── engineering.py             ← Ajan 3-5: Architecture + Code Quality + Security
+│   │   ├── process.py                 ← Ajan 6-8: Git Historian + DevOps + PR Manager
+│   │   ├── history.py                 ← Ajan 9: History Analyzer (Kalıcı Bellek)
+│   │   ├── synthesis.py               ← Ajan 10: HR Synthesizer (Nihai Rapor)
+│   │   ├── qa_agent.py                ← Q&A Agent (Rapor hakkında soru-cevap)
+│   │   └── llm_utils.py               ← LLM yardımcı fonksiyonları + timeout
+│   │
+│   ├── api/                           ← FastAPI Web Servisi
+│   │   ├── __init__.py
+│   │   ├── main.py                    ← 3 endpoint: analyze-stream, chat, pdf
+│   │   └── schemas.py                 ← Pydantic request/response modelleri
+│   │
+│   └── mcp_github_advanced/           ← MCP Sunucu Paketi (PyPI)
+│       ├── __init__.py                ← __version__
 │       ├── __main__.py                ← python -m girişi
 │       ├── server.py                  ← 15 MCP aracı
 │       ├── github.py                  ← GitHub REST + GraphQL client
 │       ├── auth.py                    ← OAuth + PAT yönetimi
 │       └── cache.py                   ← Redis önbellekleme
+│
+├── frontend/                          ← Next.js Premium Dashboard
+│   ├── src/app/
+│   │   ├── page.tsx                   ← Ana sayfa (form + SSE + rapor + chat)
+│   │   ├── layout.tsx                 ← Root layout + Inter font
+│   │   ├── globals.css                ← Dark theme + glassmorphism
+│   │   └── Landing.module.css         ← Hero + form + dashboard stilleri
+│   └── src/components/
+│       ├── AgentGrid.tsx              ← 10 ajan kartı (canlı durum)
+│       ├── AgentCard.module.css       ← Ajan kart stilleri
+│       ├── ScoreCard.tsx              ← Dairesel puan barları
+│       └── ScoreCard.module.css       ← Skor kart stilleri
 │
 ├── tests/
 │   ├── conftest.py                    ← Test fixtures
@@ -112,9 +182,6 @@ mcp-github-advanced/
 │
 └── .agent/
     ├── rules/
-    │   ├── python-style.md
-    │   ├── github-api-rules.md        ← GitHub API kuralları
-    │   └── mcp-protocol.md
     ├── workflows/
     │   ├── add-tool.md
     │   └── publish-to-pypi.md
@@ -297,6 +364,32 @@ REDIS_URL=redis://localhost:6379/0
 # Server
 MCP_SERVER_NAME=mcp-github-advanced
 LOG_LEVEL=INFO
+
+# LLM (Gemini)
+GOOGLE_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXX  # Zorunlu — Multi-Agent LLM
+```
+
+---
+
+## 🌐 FastAPI Endpoint'leri
+
+| Endpoint | Metot | Açıklama |
+|----------|-------|----------|
+| `/api/v1/analyze-stream` | `POST` | SSE ile canlı 10-ajan analiz akışı |
+| `/api/chat` | `POST` | Rapor hakkında Q&A (thread_id + query) |
+| `/api/report/pdf/{thread_id}` | `GET` | DNA Raporunu PDF olarak indir |
+
+### SSE Akış Formatı
+```json
+{"type": "system", "message": "📦 Aday profili taranıyor..."}
+{"type": "agent_update", "node": "repo_explorer", "agent": "Repo Explorer", "status": "completed"}
+{"type": "final_report", "report": "## Nihai İK Skor Kartı..."}
+{"type": "error", "message": "Hata açıklaması"}
+```
+
+### FastAPI Başlatma
+```bash
+uvicorn src.api.main:app --reload --port 8000
 ```
 
 ---
