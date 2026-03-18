@@ -28,6 +28,13 @@ Built for AI assistants and LangChain/LangGraph agents using the [Model Context 
 - 📏 Output chunking for LLM token limits (8192 tokens)
 - 🔑 PAT + OAuth 2.0 authentication
 
+**AI HR Analysis Platform:**
+- 🤖 10+1 Parallel AI Agent system (LangGraph Fan-out/Fan-in)
+- 📊 Real-time SSE streaming dashboard
+- 📄 PDF DNA Report export
+- 💬 Interactive Q&A about analysis results
+- 🧠 Persistent session memory for historical comparison
+
 ---
 
 ## 📦 Installation
@@ -138,31 +145,59 @@ Bu server, standart bir stdio altyapısı kullanarak JSON-RPC 2.0 mimarisini des
 
 ---
 
-## 🤖 AI HR Assistant (9-Agent Multi-Agent System)
+## 🤖 AI HR Assistant (10+1 Parallel Multi-Agent System)
 
-Bu repo sadece bir MCP sunucusu olmakla kalmaz, aynı zamanda bu sunucuyu kullanan **gelişmiş bir İK (HR) Aday İnceleme Ajanı** barındırır. `src/main.py` ve `src/api/main.py` üzerinden çalışan bu sistem, bir GitHub profilini **10 (9+1) farklı sanal uzman** ile analiz eder:
+Bu repo sadece bir MCP sunucusu olmakla kalmaz, aynı zamanda bu sunucuyu kullanan **gelişmiş bir İK (HR) Aday İnceleme Ajanı** barındırır. `src/main.py` ve `src/api/main.py` üzerinden çalışan bu sistem, bir GitHub profilini **10+1 farklı sanal uzman** ile analiz eder:
 
 1. **Agent 0 (Smart Profiler):** `repo_name` girilmediğinde adayın tüm profilini tarayıp en kaliteli projesini seçer.
 2. **Repo Explorer:** Proje haritasını çıkarır.
-2. **Dependency Analyst:** Kullanılan teknolojileri ve kütüphaneleri bulur.
-3. **Architecture Reviewer:** Temiz mimari (Clean Architecture/MVC vb.) kullanımını inceler.
-4. **Code Quality Inspector:** Kod okunabilirliğini ve SOLID prensiplerini denetler.
-5. **Security Agent:** Hardcoded şifreleri veya güvenlik zaaflarını tarar.
-6. **Git Historian:** Commit geçmişini inceleyip projenin kopyala-yapıştır olup olmadığını teyit eder.
-7. **DevOps Evaluator:** CI/CD süreçlerini ve Unit Test'leri kontrol eder.
-8. **PR Manager:** Takım çalışması, Issue ve Branch kullanımını değerlendirir.
-9. **HR Synthesizer:** Tüm bu teknik raporları harmanlayıp, teknik olmayan İK profesyonelleri için "Puanlı Aday Skor Kartı" çıkarır.
+3. **Dependency Analyst:** Kullanılan teknolojileri ve kütüphaneleri bulur.
+4. **Architecture Reviewer:** Temiz mimari (Clean Architecture/MVC vb.) kullanımını inceler.
+5. **Code Quality Inspector:** Kod okunabilirliğini ve SOLID prensiplerini denetler.
+6. **Security Agent:** Hardcoded şifreleri veya güvenlik zaaflarını tarar.
+7. **Git Historian:** Commit geçmişini inceleyip projenin kopyala-yapıştır olup olmadığını teyit eder.
+8. **DevOps Evaluator:** CI/CD süreçlerini ve Unit Test'leri kontrol eder.
+9. **PR Manager:** Takım çalışması, Issue ve Branch kullanımını değerlendirir.
+10. **History Analyzer:** Adayın geçmiş analizleriyle karşılaştırma yapar (Kalıcı Bellek).
+11. **HR Synthesizer:** Tüm bu teknik raporları harmanlayıp, teknik olmayan İK profesyonelleri için "Puanlı Aday Skor Kartı" ve mülakat soruları çıkarır.
+12. **Q&A Agent:** Tamamlanan rapor hakkında interaktif soru-cevap yapar.
 
 **Performans & Optimizasyon:**
-- LangGraph kullanılarak inşa edilmiştir.
+- LangGraph kullanılarak **paralel fan-out/fan-in** mimarisi ile inşa edilmiştir.
+- 7 ajan **eş zamanlı** çalışır (dependency_analyst sonrası paralel dal).
 - Her ajan **sadece uzmanlık alanına giren MCP araçlarına** filtreli şekilde erişir (Context Optimizasyonu).
+- **90s LLM / 45s Tool timeout** ile donma riski ortadan kaldırılmıştır.
+- **Global Tool Semaphore** ile paralel araç çağrıları arasındaki race condition önlenir.
 - Global bir AIO Sqlite Checkpointer kullanılarak, farklı mülakat oturumları (`thread_id`) kalıcı hafızada tutulur.
-- Tek bir Github profil analizi ortalama *15 API İsteği* ve *71.000 Token* maliyeti ile (son derece optimize edilmiş olarak) tamamlanır.
+- Tek bir Github profil analizi ortalama *15 API İsteği* ve *71.000 Token* maliyeti ile tamamlanır.
 
-**Çalıştırmak için:**
+**Çalıştırmak için (CLI):**
 ```bash
 python src/main.py
 ```
+
+**Web Arayüzü ile çalıştırmak için:**
+```bash
+# Backend
+uvicorn src.api.main:app --reload --port 8000
+
+# Frontend (ayrı terminal)
+cd frontend && npm run dev
+```
+
+---
+
+## 🌐 Web Dashboard
+
+Projede görsel bir **Premium İK Dashboard** mevcuttur:
+
+- **Dark Theme** ile glassmorphism tasarım
+- **10 Ajan Kartı** — canlı durum takibi (Beklemede / Analiz Ediliyor / Tamamlandı)
+- **SSE Canlı Akış** — React `EventSource` ile FastAPI backend'e bağlantı
+- **Teknik Skor Kartları** — Dairesel ilerleme barları ile puan gösterimi
+- **Markdown Rapor Görüntüleyici** — Nihai değerlendirme raporu
+- **PDF İndirme** — Tek tıkla DNA Raporu PDF olarak dışa aktarım
+- **Q&A Chat** — Rapor hakkında interaktif soru-cevap
 
 ---
 
@@ -205,6 +240,20 @@ Once connected to an MCP client, you can use natural language:
 │  Redis — TTL-based caching        │
 │  Graceful degradation             │
 └───────────────────────────────────┘
+```
+
+### Multi-Agent Analysis Flow (Parallel)
+```
+START ──▶ repo_explorer ──▶ dependency_analyst ──┬──▶ architecture_reviewer ──┐
+                                                  ├──▶ code_quality ──────────┤
+                                                  ├──▶ security ─────────────┤
+                                                  ├──▶ git_historian ─────────┤
+                                                  ├──▶ devops ────────────────┤
+                                                  ├──▶ pr_manager ────────────┤
+                                                  └──▶ history_analyzer ──────┘
+                                                                              │
+                                                                              ▼
+                                                                       hr_synthesizer ──▶ END
 ```
 
 ---
