@@ -11,7 +11,7 @@ async def git_historian_node(state: HRGraphState):
         state["github_owner"], state["repo_name"], state["job_description"]
     )
     messages = [SystemMessage(content=sys_prompt), HumanMessage(content="Commit geçmişini incele ve 'Kopya Mı, Gerçek Emek Mi?' sorusuna yanıt ver.")]
-    res, tokens, tool_calls = await run_agent_loop(llm_with_tools, tools, messages)
+    res, tokens, tool_calls = await run_agent_loop(llm_with_tools, tools, messages, agent_name="Git Historian")
     return {
         "commit_history_analysis": res, 
         "total_tokens": tokens,
@@ -28,7 +28,7 @@ async def devops_evaluator_node(state: HRGraphState):
         state["github_owner"], state["repo_name"], state["job_description"]
     )
     messages = [SystemMessage(content=sys_prompt), HumanMessage(content="Lütfen testlerin (Unit tests) varlığını ve GitHub Actions/CI-CD iş akışlarını kontrol et.")]
-    res, tokens, tool_calls = await run_agent_loop(llm_with_tools, tools, messages)
+    res, tokens, tool_calls = await run_agent_loop(llm_with_tools, tools, messages, agent_name="DevOps Evaluator")
     return {
         "ci_cd_testing_status": res, 
         "total_tokens": tokens,
@@ -45,7 +45,7 @@ async def pr_manager_node(state: HRGraphState):
         state["github_owner"], state["repo_name"], state["job_description"]
     )
     messages = [SystemMessage(content=sys_prompt), HumanMessage(content="Issue ve Pull Request geçmişini inceleyerek projenin yönetim standartlarını analiz et.")]
-    res, tokens, tool_calls = await run_agent_loop(llm_with_tools, tools, messages)
+    res, tokens, tool_calls = await run_agent_loop(llm_with_tools, tools, messages, agent_name="PR Manager")
     return {
         "teamwork_pr_analysis": res, 
         "total_tokens": tokens,

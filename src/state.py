@@ -2,6 +2,12 @@ import operator
 from typing import Annotated, TypedDict, List, Dict, Any, Optional
 from langchain_core.messages import BaseMessage
 
+
+def _last_value(existing: str, new: str) -> str:
+    """Paralel ajanlarda son yazanın değerini tut (overwrite reducer)."""
+    return new
+
+
 class HRGraphState(TypedDict):
     # Girdi Verileri (Başlangıçta verilecek)
     github_owner: str
@@ -34,6 +40,7 @@ class HRGraphState(TypedDict):
     historical_analysis: Optional[str]     # Geçmiş analizlerle karşılaştırma (Persistent Memory)
     final_hr_report: Optional[str]         # HR Synthesizer'dan çıkan Nihai Puan Kartı
     
-    # Yönetimsel Durumlar
-    current_agent: str # Hangi ajanın devrede olduğunu loglamak için
-    errors: list[str]
+    # Yönetimsel Durumlar — Paralel ajanlar aynı anda yazabilir, reducer ZORUNLU
+    current_agent: Annotated[str, _last_value]
+    errors: Annotated[list[str], operator.add]
+

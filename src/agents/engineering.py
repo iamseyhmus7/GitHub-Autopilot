@@ -11,7 +11,7 @@ async def architecture_reviewer_node(state: HRGraphState):
         state["github_owner"], state["repo_name"], state["job_description"]
     )
     messages = [SystemMessage(content=sys_prompt), HumanMessage(content="Lütfen repoyu tarayarak mimari yaklaşımı analiz et.")]
-    res, tokens, tool_calls = await run_agent_loop(llm_with_tools, tools, messages)
+    res, tokens, tool_calls = await run_agent_loop(llm_with_tools, tools, messages, agent_name="Architecture Reviewer")
     return {
         "architecture_analysis": res, 
         "total_tokens": tokens,
@@ -28,7 +28,7 @@ async def code_quality_inspector_node(state: HRGraphState):
         state["github_owner"], state["repo_name"], state["job_description"]
     )
     messages = [SystemMessage(content=sys_prompt), HumanMessage(content="Lütfen önemli kaynak kodlarını bulup Kod Kalite (Code Quality) raporu çıkar.")]
-    res, tokens, tool_calls = await run_agent_loop(llm_with_tools, tools, messages)
+    res, tokens, tool_calls = await run_agent_loop(llm_with_tools, tools, messages, agent_name="Code Quality Inspector")
     return {
         "code_quality_report": res, 
         "total_tokens": tokens,
@@ -53,7 +53,7 @@ async def security_agent_node(state: HRGraphState):
         state["github_owner"], state["repo_name"], state["job_description"]
     )
     messages = [SystemMessage(content=sys_prompt), HumanMessage(content="Lütfen en kilit dosyalar üzerinden hızlıca güvenlik taraması gerçekleştir.")]
-    res, tokens, tool_calls = await run_agent_loop(llm_with_tools, tools, messages)
+    res, tokens, tool_calls = await run_agent_loop(llm_with_tools, tools, messages, agent_name="Security Agent")
     return {
         "security_report": res, 
         "total_tokens": tokens,
