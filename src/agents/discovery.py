@@ -1,3 +1,4 @@
+import asyncio
 from langchain_core.messages import SystemMessage, HumanMessage
 from src.state import HRGraphState
 from src.agents.llm_utils import get_agent_llm, create_agent_prompt, run_agent_loop
@@ -8,15 +9,17 @@ async def repo_explorer_node(state: HRGraphState):
     
     llm_with_tools, tools = await get_agent_llm(allowed_tools=["get_repo_info", "list_repo_files", "get_file_content"])
     
-    overviews = []
-    for repo in state["relevant_repos"]:
+    async def analyze_repo(repo):
         sys_prompt = create_agent_prompt(
             f"Sen 'Repository Mapper' ajanısın. Görevin {repo} projesini inceleyip projenin genel amacını anlatan bir özet çıkarmaktır.",
             state["github_owner"], repo, state["job_description"]
         )
         messages = [SystemMessage(content=sys_prompt), HumanMessage(content=f"{repo} reposunu haritala.")]
-        res, _, _ = await run_agent_loop(llm_with_tools, tools, messages)
-        overviews.append(f"--- {repo} Özeti ---\n{res}")
+        res, _, _ = await run_agent_loop(llm_with_tools, tools, messages, agent_name=f"Repo Explorer ({repo})")
+        return f"--- {repo} Özeti ---\n{res}"
+
+    tasks = [analyze_repo(repo) for repo in state["relevant_repos"]]
+    overviews = await asyncio.gather(*tasks)
 
     return {
         "repo_overview": "\n\n".join(overviews),
@@ -29,15 +32,17 @@ async def dependency_analyst_node(state: HRGraphState):
     
     llm_with_tools, tools = await get_agent_llm(allowed_tools=["list_repo_files", "get_file_content"])
     
-    stacks = []
-    for repo in state["relevant_repos"]:
+    async def get_stack(repo):
         sys_prompt = create_agent_prompt(
             f"Sen 'Dependency Analyst' ajanısın. Görevin {repo} projesindeki bağımlılık dosyalarını bulup teknoloji yığınını çıkarmaktır.",
             state["github_owner"], repo, state["job_description"]
         )
         messages = [SystemMessage(content=sys_prompt), HumanMessage(content=f"{repo} teknolojilerini listele.")]
-        res, _, _ = await run_agent_loop(llm_with_tools, tools, messages)
-        stacks.append(f"--- {repo} Teknolojileri ---\n{res}")
+        res, _, _ = await run_agent_loop(llm_with_tools, tools, messages, agent_name=f"Dependency Analyst ({repo})")
+        return f"--- {repo} Teknolojileri ---\n{res}"
+
+    tasks = [get_stack(repo) for repo in state["relevant_repos"]]
+    stacks = await asyncio.gather(*tasks)
 
     return {
         "tech_stack": "\n\n".join(stacks),
