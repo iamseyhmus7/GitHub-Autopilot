@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mcp-github-advanced"
-version = "0.1.1"
+version = "0.2.0"
 description = "Advanced GitHub MCP server — repo analysis, PR management, code review, CI/CD monitoring"
 readme = "README.md"
 license = { text = "MIT" }
