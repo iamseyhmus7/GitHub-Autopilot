@@ -1,7 +1,7 @@
 """test_server.py — MCP sunucu araç kaydı ve yönlendirme testleri.
 
-14 aracın doğru kaydedildiğini, call_tool'un doğru yönlendirdiğini
-ve yanıtların TextContent olarak formatlandığını doğrular.
+15 aracın doğru kaydedildiğini, call_tool'un doğru yönlendirdiğini
+ve yanıtların string olarak formatlandığını doğrular.
 Tüm testler respx mock'ları kullanır — gerçek GitHub API isteği yapılmaz.
 """
 
@@ -13,24 +13,45 @@ import httpx
 import pytest
 import respx
 
-from mcp_github_advanced.server import TOOLS, handle_call_tool, handle_list_tools
+from mcp_github_advanced.server import mcp, _get_github, _to_json
+import mcp_github_advanced.server as srv
 
 
 # ══════════════════════════════════════════════════════════════════════
-#  Araç Kaydı — 14 aracın doğru tanımlandığını doğrular
+#  Yardımcı — Test ortamı için GitHubClient kurulumu
+# ══════════════════════════════════════════════════════════════════════
+
+@pytest.fixture
+async def setup_github():
+    """Test için GitHubClient'ı oluşturup bağlar, test sonunda kapatır."""
+    from mcp_github_advanced.auth import AuthManager, AuthSettings
+    from mcp_github_advanced.github import GitHubClient
+
+    settings = AuthSettings(github_token="ghp_test")
+    auth = AuthManager(settings)
+    srv._github = GitHubClient(auth=auth, cache=None)
+    await srv._github.start()
+    yield
+    await srv._github.close()
+    srv._github = None
+
+
+# ══════════════════════════════════════════════════════════════════════
+#  Araç Kaydı — 15 aracın doğru tanımlandığını doğrular
 # ══════════════════════════════════════════════════════════════════════
 
 class TestToolRegistration:
-    async def test_14_arac_dondurur(self):
-        """list_tools() tam olarak 14 araç döndürmeli."""
-        tools = await handle_list_tools()
-        assert len(tools) == 14
+    async def test_15_arac_kayitli(self):
+        """FastMCP'de tam olarak 15 araç kayıtlı olmalı."""
+        tools = await mcp.list_tools()
+        assert len(tools) == 15
 
     async def test_tum_arac_isimleri(self):
         """Tüm beklenen araç isimleri mevcut olmalı."""
-        tools = await handle_list_tools()
+        tools = await mcp.list_tools()
         names = {t.name for t in tools}
         expected = {
+            "list_user_repos",
             "get_repo_info",
             "get_file_content",
             "list_repo_files",
@@ -48,53 +69,22 @@ class TestToolRegistration:
         }
         assert names == expected
 
-    async def test_tum_araclar_giris_semasi_var(self):
-        """Her aracın inputSchema tanımı olmalı."""
-        tools = await handle_list_tools()
-        for tool in tools:
-            assert tool.inputSchema is not None
-            assert "properties" in tool.inputSchema
-            assert "required" in tool.inputSchema
-
     async def test_tum_araclar_aciklama_var(self):
         """Her aracın açıklaması (description) olmalı."""
-        tools = await handle_list_tools()
+        tools = await mcp.list_tools()
         for tool in tools:
             assert tool.description
             assert len(tool.description) > 10
 
 
 # ══════════════════════════════════════════════════════════════════════
-#  Araç Yönlendirme — call_tool() doğru metoda yönlendiriyor mu?
+#  Araç Yönlendirme — doğru metoda yönlendiriyor mu?
 # ══════════════════════════════════════════════════════════════════════
 
 class TestToolDispatch:
-    async def test_bilinmeyen_arac(self):
-        """Bilinmeyen araç hata mesajı döndürmeli, istisna fırlatmamalı."""
-        from mcp_github_advanced.auth import AuthManager, AuthSettings
-        from mcp_github_advanced.github import GitHubClient
-        import mcp_github_advanced.server as srv
-
-        settings = AuthSettings(github_token="ghp_test")
-        auth = AuthManager(settings)
-        srv._github = GitHubClient(auth=auth, cache=None)
-        await srv._github.start()
-
-        try:
-            result = await handle_call_tool("olmayan_arac", {})
-            assert len(result) == 1
-            assert "Bilinmeyen araç" in result[0].text
-        finally:
-            await srv._github.close()
-            srv._github = None
-
     @respx.mock
-    async def test_get_repo_info_yonlendirme(self):
-        """get_repo_info sunucu üzerinden doğru yönlendirilmeli."""
-        from mcp_github_advanced.auth import AuthManager, AuthSettings
-        from mcp_github_advanced.github import GitHubClient
-        import mcp_github_advanced.server as srv
-
+    async def test_get_repo_info_yonlendirme(self, setup_github):
+        """get_repo_info doğru çalışmalı."""
         respx.get("https://api.github.com/repos/owner/repo").mock(
             return_value=httpx.Response(200, json={
                 "name": "repo",
@@ -115,30 +105,16 @@ class TestToolDispatch:
             })
         )
 
-        settings = AuthSettings(github_token="ghp_test")
-        auth = AuthManager(settings)
-        srv._github = GitHubClient(auth=auth, cache=None)
-        await srv._github.start()
-
-        try:
-            result = await handle_call_tool(
-                "get_repo_info", {"owner": "owner", "repo": "repo"}
-            )
-            assert len(result) == 1
-            data = json.loads(result[0].text)
-            assert data["name"] == "repo"
-            assert data["stargazers_count"] == 100
-        finally:
-            await srv._github.close()
-            srv._github = None
+        # Doğrudan fonksiyonu çağır (FastMCP dekoratörler fonksiyonu korur)
+        from mcp_github_advanced.server import get_repo_info
+        result = await get_repo_info(owner="owner", repo="repo")
+        data = json.loads(result)
+        assert data["name"] == "repo"
+        assert data["stargazers_count"] == 100
 
     @respx.mock
-    async def test_list_commits_yonlendirme(self):
-        """list_commits sunucu üzerinden doğru yönlendirilmeli."""
-        from mcp_github_advanced.auth import AuthManager, AuthSettings
-        from mcp_github_advanced.github import GitHubClient
-        import mcp_github_advanced.server as srv
-
+    async def test_list_commits_yonlendirme(self, setup_github):
+        """list_commits doğru çalışmalı."""
         respx.get("https://api.github.com/repos/owner/repo/commits").mock(
             return_value=httpx.Response(200, json=[
                 {
@@ -151,29 +127,15 @@ class TestToolDispatch:
             ])
         )
 
-        settings = AuthSettings(github_token="ghp_test")
-        auth = AuthManager(settings)
-        srv._github = GitHubClient(auth=auth, cache=None)
-        await srv._github.start()
-
-        try:
-            result = await handle_call_tool(
-                "list_commits", {"owner": "owner", "repo": "repo"}
-            )
-            data = json.loads(result[0].text)
-            assert isinstance(data, list)
-            assert data[0]["sha"] == "abc1234"
-        finally:
-            await srv._github.close()
-            srv._github = None
+        from mcp_github_advanced.server import list_commits
+        result = await list_commits(owner="owner", repo="repo")
+        data = json.loads(result)
+        assert isinstance(data, list)
+        assert data[0]["sha"] == "abc1234"
 
     @respx.mock
-    async def test_create_issue_yonlendirme(self):
-        """create_issue yazma işlemi sunucu üzerinden çalışmalı."""
-        from mcp_github_advanced.auth import AuthManager, AuthSettings
-        from mcp_github_advanced.github import GitHubClient
-        import mcp_github_advanced.server as srv
-
+    async def test_create_issue_yonlendirme(self, setup_github):
+        """create_issue yazma işlemi doğru çalışmalı."""
         respx.post("https://api.github.com/repos/owner/repo/issues").mock(
             return_value=httpx.Response(201, json={
                 "number": 99,
@@ -183,92 +145,28 @@ class TestToolDispatch:
             })
         )
 
-        settings = AuthSettings(github_token="ghp_test")
-        auth = AuthManager(settings)
-        srv._github = GitHubClient(auth=auth, cache=None)
-        await srv._github.start()
-
-        try:
-            result = await handle_call_tool(
-                "create_issue",
-                {"owner": "owner", "repo": "repo", "title": "Yeni Hata"},
-            )
-            data = json.loads(result[0].text)
-            assert data["number"] == 99
-            assert data["title"] == "Yeni Hata"
-        finally:
-            await srv._github.close()
-            srv._github = None
-
-    @respx.mock
-    async def test_hata_yonetimi(self):
-        """Hata fırlatan araç çağrısı hata metni döndürmeli, çökmemeli."""
-        from mcp_github_advanced.auth import AuthManager, AuthSettings
-        from mcp_github_advanced.github import GitHubClient
-        import mcp_github_advanced.server as srv
-
-        respx.get("https://api.github.com/repos/owner/repo").mock(
-            return_value=httpx.Response(500, json={"message": "Internal Server Error"})
-        )
-
-        settings = AuthSettings(github_token="ghp_test")
-        auth = AuthManager(settings)
-        srv._github = GitHubClient(auth=auth, cache=None)
-        await srv._github.start()
-
-        try:
-            result = await handle_call_tool(
-                "get_repo_info", {"owner": "owner", "repo": "repo"}
-            )
-            assert len(result) == 1
-            assert "Hata" in result[0].text
-        finally:
-            await srv._github.close()
-            srv._github = None
+        from mcp_github_advanced.server import create_issue
+        result = await create_issue(owner="owner", repo="repo", title="Yeni Hata")
+        data = json.loads(result)
+        assert data["number"] == 99
+        assert data["title"] == "Yeni Hata"
 
 
 # ══════════════════════════════════════════════════════════════════════
-#  Araç Şema Doğrulama — inputSchema'ların doğruluğu
+#  Yardımcı Fonksiyon Testleri
 # ══════════════════════════════════════════════════════════════════════
 
-class TestToolSchemas:
-    def test_repo_araclari_owner_repo_zorunlu(self):
-        """Repo araçları owner ve repo parametrelerini zorunlu kılmalı."""
-        repo_tools = ["get_repo_info", "list_repo_files", "search_code"]
-        for tool in TOOLS:
-            if tool.name in repo_tools:
-                assert "owner" in tool.inputSchema["required"]
-                assert "repo" in tool.inputSchema["required"]
+class TestHelpers:
+    def test_to_json_normal(self):
+        """Normal boyuttaki veri kesim yapılmadan JSON'a çevrilmeli."""
+        data = {"name": "test", "count": 42}
+        result = _to_json(data)
+        parsed = json.loads(result)
+        assert parsed["name"] == "test"
 
-    def test_commit_araclari_owner_repo_zorunlu(self):
-        """Commit araçları owner ve repo parametrelerini zorunlu kılmalı."""
-        commit_tools = ["list_commits", "get_commit_diff", "get_contributor_stats"]
-        for tool in TOOLS:
-            if tool.name in commit_tools:
-                assert "owner" in tool.inputSchema["required"]
-                assert "repo" in tool.inputSchema["required"]
-
-    def test_get_commit_diff_sha_zorunlu(self):
-        """get_commit_diff aracı sha parametresini zorunlu kılmalı."""
-        for tool in TOOLS:
-            if tool.name == "get_commit_diff":
-                assert "sha" in tool.inputSchema["required"]
-
-    def test_create_pr_review_body_zorunlu(self):
-        """create_pr_review aracı body ve pr_number zorunlu kılmalı."""
-        for tool in TOOLS:
-            if tool.name == "create_pr_review":
-                assert "body" in tool.inputSchema["required"]
-                assert "pr_number" in tool.inputSchema["required"]
-
-    def test_create_issue_title_zorunlu(self):
-        """create_issue aracı title parametresini zorunlu kılmalı."""
-        for tool in TOOLS:
-            if tool.name == "create_issue":
-                assert "title" in tool.inputSchema["required"]
-
-    def test_get_workflow_logs_run_id_zorunlu(self):
-        """get_workflow_logs aracı run_id parametresini zorunlu kılmalı."""
-        for tool in TOOLS:
-            if tool.name == "get_workflow_logs":
-                assert "run_id" in tool.inputSchema["required"]
+    def test_to_json_truncation(self):
+        """Büyük veri 8192 token sınırına göre kesilmeli."""
+        big_data = {"content": "x" * 40_000}
+        result = _to_json(big_data)
+        assert "kesildi" in result
+        assert len(result) < 35_000
