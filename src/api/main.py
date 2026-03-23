@@ -126,6 +126,8 @@ Adayın Repoları:
                 "job_description": job_desc,
                 "total_tokens": 0,
                 "total_tool_calls": 0,
+                "current_agent": "",
+                "errors": [],
                 "messages": [HumanMessage(content=f"{github_owner} kullanıcısının {', '.join(relevant_repos)} repolarını {job_desc} ilanına göre analiz edin.")]
             }
             
@@ -180,11 +182,14 @@ async def chat_with_report(req: ChatRequest):
     async with AsyncSqliteSaver.from_conn_string(DB_PATH) as checkpointer:
         config = {"configurable": {"thread_id": req.thread_id}}
         checkpoint = await checkpointer.aget(config)
+        if not checkpoint:
+            return {"answer": "Oturum bulunamadı veya analiz tamamlanmadı. Lütfen analizin bitmesini bekleyin."}
         
-        if not checkpoint or "values" not in checkpoint:
-            return {"error": "Oturum bulunamadı veya analiz tamamlanmadı."}
+        # LangGraph versiyonuna göre 'values' veya 'channel_values' olabilir
+        state = checkpoint.get("values") or checkpoint.get("channel_values")
+        if not state:
+            return {"answer": "Oturum verisine ulaşılamadı. Lütfen analizi tekrar çalıştırın."}
             
-        state = checkpoint["values"]
         answer = await run_qa_agent(state, req.query)
         
         return {
@@ -201,11 +206,15 @@ async def export_pdf(thread_id: str):
     async with AsyncSqliteSaver.from_conn_string(DB_PATH) as checkpointer:
         config = {"configurable": {"thread_id": thread_id}}
         checkpoint = await checkpointer.aget(config)
+        if not checkpoint:
+            return {"error": "Rapor bulunamadı."}
         
-        if not checkpoint or "values" not in checkpoint:
+        # LangGraph versiyonuna göre 'values' veya 'channel_values' olabilir
+        state = checkpoint.get("values") or checkpoint.get("channel_values")
+        if not state:
+            print(f"[PDF DEBUG] Checkpoint var ama values/channel_values yok! Keys: {list(checkpoint.keys())}", flush=True)
             return {"error": "Rapor bulunamadı."}
             
-        state = checkpoint["values"]
         report_content = state.get("final_hr_report", "Rapor verisi bulunamadı.")
         
         # PDF Oluşturma (Geçici dosya)
@@ -226,11 +235,22 @@ async def export_pdf(thread_id: str):
         pdf.add_page()
         pdf.set_font("helvetica", size=12)
         
-        # Basitçe markdown'ı temizleyip PDF'e yazıyoruz (Daha gelişmiş bir parser eklenebilir)
+        # FPDF helvetica fontu sadace Latin-1 destekler (Türkçe ve emojiler hata verir).
+        # Bu yüzden metni basitleştiriyoruz:
         clean_text = report_content.replace("#", "").replace("*", "").replace("`", "")
         
-        # Encoding sorunu yaşamamak için latin-1'e uygun hale getiriyoruz veya unicode ayarı yapıyoruz
-        # Şimdilik en basit haliyle:
+        # 1. Türkçe karakterleri İngilizce'ye çevir
+        tr_to_en = {
+            'ş': 's', 'Ş': 'S', 'ğ': 'g', 'Ğ': 'G', 'ı': 'i', 'İ': 'I',
+            'ç': 'c', 'Ç': 'C', 'ö': 'o', 'Ö': 'O', 'ü': 'u', 'Ü': 'U'
+        }
+        for tr, en in tr_to_en.items():
+            clean_text = clean_text.replace(tr, en)
+            
+        # 2. Emojileri temizle (regex)
+        import re
+        clean_text = re.sub(r'[^\x00-\x7F]+', '', clean_text)  # Sadece ASCII'yi tut
+        
         pdf.multi_cell(0, 10, clean_text)
         
         file_path = f"report_{thread_id}.pdf"
