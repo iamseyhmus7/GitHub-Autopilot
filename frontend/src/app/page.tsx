@@ -3,10 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import dynamic from "next/dynamic";
 import { Github, Send, Terminal, BarChart3, Users, Sparkles } from "lucide-react";
 import AgentGrid from "@/components/AgentGrid";
 import { TechnicalScoreBoard } from "@/components/ScoreCard";
 import styles from "./Landing.module.css";
+
+const Mermaid = dynamic(() => import("./Mermaid"), { ssr: false });
 
 interface LogEntry {
   type: "system" | "agent_update" | "final_report" | "error";
@@ -16,6 +19,28 @@ interface LogEntry {
   status?: string;
   report?: string;
 }
+
+// Mock scoring logic for demonstration if not in report
+const extractScores = (report: string) => {
+  // Simple regex to find scores like "Security: 85/100" or similar
+  const extracted: Record<string, number> = {};
+  const patterns = [
+    { key: "mimari", regex: /\[MİMARİ_PUAN:\s*(\d+)\]/i },
+    { key: "güvenlik", regex: /\[GÜVENLİK_PUAN:\s*(\d+)\]/i },
+    { key: "kod_kalitesi", regex: /\[KOD_KALİTESİ_PUAN:\s*(\d+)\]/i },
+    { key: "devops", regex: /\[DEVOPS_PUAN:\s*(\d+)\]/i },
+  ];
+
+  patterns.forEach(p => {
+    const match = report.match(p.regex);
+    if (match) extracted[p.key] = parseInt(match[1]);
+  });
+
+  if (Object.keys(extracted).length === 0) {
+    return { mimari: 78, güvenlik: 92, kod_kalitesi: 84, devops: 65 };
+  }
+  return extracted;
+};
 
 export default function Home() {
   const [owner, setOwner] = useState("");
@@ -33,34 +58,6 @@ export default function Home() {
   const [isChatLoading, setIsChatLoading] = useState(false);
   
   const resultsRef = useRef<HTMLDivElement>(null);
-
-  // Mock scoring logic for demonstration if not in report
-  const extractScores = (report: string) => {
-    // Simple regex to find scores like "Security: 85/100" or similar
-    const extracted: Record<string, number> = {};
-    const patterns = [
-      { key: "mimari", regex: /\[MİMARİ_PUAN:\s*(\d+)\]/i },
-      { key: "güvenlik", regex: /\[GÜVENLİK_PUAN:\s*(\d+)\]/i },
-      { key: "kod_kalitesi", regex: /\[KOD_KALİTESİ_PUAN:\s*(\d+)\]/i },
-      { key: "devops", regex: /\[DEVOPS_PUAN:\s*(\d+)\]/i },
-    ];
-
-    patterns.forEach(p => {
-      const match = report.match(p.regex);
-      if (match) extracted[p.key] = parseInt(match[1]);
-    });
-
-    // Fallback mock scores if nothing found
-    if (Object.keys(extracted).length === 0) {
-      return {
-        mimari: 78,
-        güvenlik: 92,
-        kod_kalitesi: 84,
-        devops: 65
-      };
-    }
-    return extracted;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,9 +149,27 @@ export default function Home() {
     }
   };
 
-  const handleDownloadPDF = () => {
-    if (!threadId) return;
-    window.open(`http://localhost:8000/api/report/pdf/${threadId}`, "_blank");
+  const handleDownloadPDF = async () => {
+    if (!resultsRef.current || !owner) return;
+    
+    try {
+      // @ts-ignore - types are often missing for html2pdf
+      const html2pdf = (await import('html2pdf.js')).default;
+      const element = resultsRef.current;
+      
+      const opt = {
+        margin:       [10, 10, 10, 10] as [number, number, number, number],
+        filename:     `DNA_Report_${owner}_${repo || 'profile'}.pdf`,
+        image:        { type: 'jpeg' as const, quality: 1 },
+        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0a0f1c', windowWidth: 1200, letterRendering: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+      
+      html2pdf().set(opt).from(element).save();
+    } catch (err) {
+      console.error("PDF Export error:", err);
+    }
   };
 
   return (
@@ -274,7 +289,23 @@ export default function Home() {
               <div style={{ height: '1px', flex: 1, background: 'rgba(255,255,255,0.1)' }} />
             </div>
             <div className={styles.markdownContent}>
-              <ReactMarkdown>{finalReport}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  code({ node, inline, className, children, ...props } : any) {
+                    const match = /language-(\w+)/.exec(className || '');
+                    if (!inline && match && match[1] === 'mermaid') {
+                      return <Mermaid chart={String(children).replace(/\n$/, '')} />;
+                    }
+                    return (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    );
+                  }
+                }}
+              >
+                {finalReport}
+              </ReactMarkdown>
             </div>
           </motion.div>
 

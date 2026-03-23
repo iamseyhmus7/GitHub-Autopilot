@@ -4,6 +4,20 @@ from mcp.client.stdio import stdio_client, StdioServerParameters
 from mcp.client.session import ClientSession
 from langchain_mcp_adapters.tools import load_mcp_tools
 
+
+def _clean_tool_schemas(tools: list) -> list:
+    """FastMCP araç şemalarından 'additionalProperties' alanını temizler.
+    LangChain bu alanı desteklemez ve her çağrıda uyarı basar."""
+    for tool in tools:
+        schema = getattr(tool, "args_schema", None)
+        if schema and hasattr(schema, "schema"):
+            try:
+                s = schema.schema()
+                s.pop("additionalProperties", None)
+            except Exception:
+                pass
+    return tools
+
 class MCPConnectionManager:
     _instance = None
 
@@ -35,8 +49,9 @@ class MCPConnectionManager:
             self.session = await self.stack.enter_async_context(ClientSession(read_stream, write_stream))
             await self.session.initialize()
             
-            # Load tools
+            # Load tools ve şema temizliği
             self.tools = await load_mcp_tools(self.session)
+            self.tools = _clean_tool_schemas(self.tools)
             print(f"[System] MCP Server Connected. Loaded {len(self.tools)} tools.")
         except Exception as e:
             print(f"[Error] Failed to connect to MCP Server: {e}")
