@@ -23,7 +23,8 @@ Bu beceri, `mcp-github-advanced` MCP sunucu kod tabanı ile çalışmak için ta
 ## Mimari
 
 ```
-server.py  →  15 MCP aracı (list_tools + call_tool)
+server.py  →  15 MCP aracı (FastMCP @mcp.tool dekoratörleri)
+              Hem stdio hem SSE (HTTP) transport destekler
   ├── github.py  →  REST + GraphQL istemcisi (httpx async)
   ├── auth.py    →  PAT + OAuth 2.0 kimlik doğrulama
   └── cache.py   →  TTL stratejili Redis önbellekleme
@@ -107,6 +108,7 @@ api/main.py →  FastAPI Web Servisi
 - **Test çalıştır**: `pytest` (`asyncio_mode = "auto"` ile)
 - **Lint**: `ruff check src/ tests/`
 - **Backend başlat**: `uvicorn src.api.main:app --reload --port 8000`
+- **SSE MCP başlat**: `fastmcp run src/mcp_github_advanced/server.py:mcp --transport sse --port 8080`
 - **Frontend başlat**: `cd frontend && npm run dev`
 
 ## Dosya Haritası

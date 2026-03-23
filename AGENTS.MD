@@ -24,8 +24,8 @@ Bu server bir **web uygulamasının backend'i** olarak tasarlanmıştır:
 ```
 ┌─────────────────────────────────────────────┐
 │              server.py                       │
-│         15 MCP Aracı (list_tools)           │
-│         call_tool() yönlendirici            │
+│         15 MCP Aracı (@mcp.tool)            │
+│         FastMCP dekoratör tabanlı            │
 └──────────────────┬──────────────────────────┘
                    │
         ┌──────────┴──────────┐
@@ -104,6 +104,7 @@ START ──▶ repo_explorer ──▶ dependency_analyst ──┬──▶ ar
 | Katman | Teknoloji | Versiyon | Neden? |
 |--------|-----------|----------|--------|
 | MCP Protokolü | `mcp` | ≥1.19.0 | Resmi Python SDK |
+| MCP Çerçeve | `fastmcp` | ≥2.0.0 | Dekoratör tabanlı sunucu + SSE transport |
 | HTTP | `httpx` | ≥0.28.0 | Async, REST + GraphQL |
 | Auth | `authlib` | ≥1.3.0 | OAuth 2.0 akışı |
 | Cache | `redis[hiredis]` | ≥5.0.0 | Rate limit koruması |
@@ -442,6 +443,11 @@ startCommand:
   command: uvx
   args: ["mcp-github-advanced"]
 ```
+
+> **SSE Transport ile çalıştırma:**
+> ```bash
+> fastmcp run src/mcp_github_advanced/server.py:mcp --transport sse --port 8080
+> ```
 
 ---
 
