@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mcp-github-advanced"
-version = "0.2.0"
+version = "0.2.2"
 description = "Advanced GitHub MCP server — repo analysis, PR management, code review, CI/CD monitoring"
 readme = "README.md"
 license = { text = "MIT" }
@@ -52,9 +52,9 @@ dev = [
 mcp-github-advanced = "mcp_github_advanced.server:main"
 
 [project.urls]
-Homepage   = "https://github.com/iamseyhmus7/mcp-github-advanced"
-Repository = "https://github.com/iamseyhmus7/mcp-github-advanced"
-Issues     = "https://github.com/iamseyhmus7/mcp-github-advanced/issues"
+Homepage   = "https://github.com/iamseyhmus7/GitHub-Autopilot"
+Repository = "https://github.com/iamseyhmus7/GitHub-Autopilot"
+Issues     = "https://github.com/iamseyhmus7/GitHub-Autopilot/issues"
 
 [tool.hatch.build.targets.sdist]
 exclude = ["/frontend", "/tests", "/.gemini", ".env"]

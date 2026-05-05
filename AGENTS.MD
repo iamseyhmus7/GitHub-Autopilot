@@ -24,7 +24,7 @@ Bu server bir **web uygulamasının backend'i** olarak tasarlanmıştır:
 ```
 ┌─────────────────────────────────────────────┐
 │              server.py                       │
-│         15 MCP Aracı (@mcp.tool)            │
+│         17 MCP Aracı (@mcp.tool)            │
 │         FastMCP dekoratör tabanlı            │
 └──────────────────┬──────────────────────────┘
                    │
@@ -158,7 +158,7 @@ mcp-github-advanced/
 │   └── mcp_github_advanced/           ← MCP Sunucu Paketi (PyPI)
 │       ├── __init__.py                ← __version__
 │       ├── __main__.py                ← python -m girişi
-│       ├── server.py                  ← 15 MCP aracı
+│       ├── server.py                  ← 17 MCP aracı
 │       ├── github.py                  ← GitHub REST + GraphQL client
 │       ├── auth.py                    ← OAuth + PAT yönetimi
 │       └── cache.py                   ← Redis önbellekleme
@@ -193,7 +193,7 @@ mcp-github-advanced/
 
 ---
 
-## 🛠️ 15 MCP Aracı
+## 🛠️ 17 MCP Aracı
 
 ### 📁 Repo Araçları
 
@@ -219,21 +219,28 @@ mcp-github-advanced/
 |------|----------|-------------------|
 | `list_pull_requests` | Açık/kapalı PR listesi | `owner`, `repo` |
 | `get_pr_diff` | PR'ın tüm değişiklikleri (diff) | `owner`, `repo`, `pr_number` |
-| `create_pr_review` | PR'a AI review yorumu yaz | `owner`, `repo`, `pr_number`, `body` |
 
 ### 🐛 Issue Araçları
 
 | Araç | Açıklama | Zorunlu Parametre |
 |------|----------|-------------------|
 | `list_issues` | Issue listesi + etiketler | `owner`, `repo` |
-| `create_issue` | Yeni issue aç | `owner`, `repo`, `title` |
 
 ### ⚙️ Actions/CI Araçları
 
 | Araç | Açıklama | Zorunlu Parametre |
 |------|----------|-------------------|
 | `get_workflow_runs` | CI/CD çalışma geçmişi | `owner`, `repo` |
-| `get_workflow_logs` | Başarısız run'ın hata logları | `owner`, `repo`, `run_id` |
+
+### 🧠 Derin Analiz Araçları
+
+| Araç | Açıklama | Zorunlu Parametre |
+|------|----------|-------------------|
+| `analyze_architecture` | Mimari desen ve katman analizi | `owner`, `repo` |
+| `analyze_dependencies` | Teknoloji yığını ve import grafiği | `owner`, `repo` |
+| `detect_entry_points` | Giriş noktaları (CLI, API, Main) tespiti | `owner`, `repo` |
+| `analyze_codebase_complexity` | Karmaşıklık skoru ve hotspot analizi | `owner`, `repo` |
+| `analyze_commit_patterns` | Geliştirici davranışı ve orijinalik tespiti | `owner`, `repo` |
 
 ---
 
