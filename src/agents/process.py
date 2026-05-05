@@ -3,9 +3,9 @@ from src.state import HRGraphState
 from src.agents.llm_utils import get_agent_llm, create_agent_prompt, run_agent_loop
 
 async def git_historian_node(state: HRGraphState):
-    """Ajan 6: Dedektif (Git Historian)"""
+    """Ajan 6: Dedektif (Git Historian) — analyze_commit_patterns derin analiz aracını kullanır"""
     print("🤖 [Ajan 6] Git Historian (Dedektif) devrede...")
-    llm_with_tools, tools = await get_agent_llm(allowed_tools=["list_commits"])
+    llm_with_tools, tools = await get_agent_llm(allowed_tools=["analyze_commit_patterns"])
     sys_prompt = create_agent_prompt(
         "Sen 'Git Historian' (Dedektif) ajanısın. Adayın projeye emek verip vermediğini anlamak için SADECE 1 kere list_commits kullan. Fazla arama yapma.",
         state["github_owner"], state["repo_name"], state["job_description"]
