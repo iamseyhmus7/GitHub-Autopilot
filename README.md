@@ -17,11 +17,12 @@ Built for AI assistants and LangChain/LangGraph agents using the [Model Context 
 |----------|-------|-------------|
 | 📁 **Repo** | `list_user_repos`, `get_repo_info`, `get_file_content`, `list_repo_files`, `search_code` | User profiles, repository metadata, file contents, directory tree, code search |
 | 📝 **Commit** | `list_commits`, `get_commit_diff`, `get_contributor_stats` | Commit history, diffs, contributor statistics |
-| 🔀 **PR** | `list_pull_requests`, `get_pr_diff`, `create_pr_review` | PR management and AI-powered code reviews |
-| 🐛 **Issue** | `list_issues`, `create_issue` | Issue tracking and creation |
-| ⚙️ **CI/CD** | `get_workflow_runs`, `get_workflow_logs` | GitHub Actions monitoring and log analysis |
+| 🔀 **PR** | `list_pull_requests`, `get_pr_diff` | PR management and diff analysis |
+| 🐛 **Issue** | `list_issues` | Issue tracking |
+| ⚙️ **CI/CD** | `get_workflow_runs` | GitHub Actions monitoring |
+| 🧠 **Deep Analysis** | `analyze_architecture`, `analyze_dependencies`, `analyze_codebase_complexity`, `analyze_commit_patterns`, `detect_entry_points` | High-level architectural mapping, tech stack analysis, codebase complexity scoring, and developer behavior patterns |
 
-**15 tools** in total, all with:
+**17 tools** in total, all with:
 - 🔒 Versioned API headers (`X-GitHub-Api-Version: 2022-11-28`)
 - ⚡ Redis caching with intelligent TTL strategy
 - 🔄 Automatic retry with exponential backoff
@@ -150,12 +151,12 @@ Bu server, standart bir stdio altyapısı kullanarak JSON-RPC 2.0 mimarisini des
 Bu repo sadece bir MCP sunucusu olmakla kalmaz, aynı zamanda bu sunucuyu kullanan **gelişmiş bir İK (HR) Aday İnceleme Ajanı** barındırır. `src/main.py` ve `src/api/main.py` üzerinden çalışan bu sistem, bir GitHub profilini **10+1 farklı sanal uzman** ile analiz eder:
 
 1. **Agent 0 (Smart Profiler):** `repo_name` girilmediğinde adayın tüm profilini tarayıp en kaliteli projesini seçer.
-2. **Repo Explorer:** Proje haritasını çıkarır.
-3. **Dependency Analyst:** Kullanılan teknolojileri ve kütüphaneleri bulur.
-4. **Architecture Reviewer:** Temiz mimari (Clean Architecture/MVC vb.) kullanımını inceler.
-5. **Code Quality Inspector:** Kod okunabilirliğini ve SOLID prensiplerini denetler.
+2. **Repo Explorer:** Proje haritasını ve giriş noktalarını (`detect_entry_points`) çıkarır.
+3. **Dependency Analyst:** Kullanılan teknolojileri ve kütüphaneleri (`analyze_dependencies`) haritalandırır.
+4. **Architecture Reviewer:** Temiz mimari (Clean Architecture/MVC vb.) katmanlarını (`analyze_architecture`) inceler.
+5. **Code Quality Inspector:** Kod okunabilirliğini ve karmaşıklık skorunu (`analyze_codebase_complexity`) denetler.
 6. **Security Agent:** Hardcoded şifreleri veya güvenlik zaaflarını tarar.
-7. **Git Historian:** Commit geçmişini inceleyip projenin kopyala-yapıştır olup olmadığını teyit eder.
+7. **Git Historian:** Commit geçmişini inceleyip geliştirme desenlerini (`analyze_commit_patterns`) analiz eder.
 8. **DevOps Evaluator:** CI/CD süreçlerini ve Unit Test'leri kontrol eder.
 9. **PR Manager:** Takım çalışması, Issue ve Branch kullanımını değerlendirir.
 10. **History Analyzer:** Adayın geçmiş analizleriyle karşılaştırma yapar (Kalıcı Bellek).
