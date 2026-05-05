@@ -3,9 +3,9 @@ from src.state import HRGraphState
 from src.agents.llm_utils import get_agent_llm, create_agent_prompt, run_agent_loop
 
 async def architecture_reviewer_node(state: HRGraphState):
-    """Ajan 3: Mimari İnceleyici"""
+    """Ajan 3: Mimari İnceleyici — analyze_architecture derin analiz aracını kullanır"""
     print("🤖 [Ajan 3] Architecture Reviewer (Mimari İnceleyici) devrede...")
-    llm_with_tools, tools = await get_agent_llm(allowed_tools=["list_repo_files"])
+    llm_with_tools, tools = await get_agent_llm(allowed_tools=["analyze_architecture"])
     sys_prompt = create_agent_prompt(
         "Sen 'Architecture Reviewer' ajanısın. Görevin projenin klasör hiyerarşisine bakarak (MVC, Clean Architecture, Microservices vb.) bir mimari desene uyup uymadığını analiz etmektir. Aday dosyaları rastgele mi dağıtmış yoksa mantıklı bir katmanlandırma mı yapmış?",
         state["github_owner"], state["repo_name"], state["job_description"]
@@ -20,9 +20,9 @@ async def architecture_reviewer_node(state: HRGraphState):
     }
 
 async def code_quality_inspector_node(state: HRGraphState):
-    """Ajan 4: Kod Kalite Müfettişi"""
+    """Ajan 4: Kod Kalite Müfettişi — analyze_codebase_complexity derin analiz aracını kullanır"""
     print("🤖 [Ajan 4] Code Quality Inspector (Kod Kalite Müfettişi) devrede...")
-    llm_with_tools, tools = await get_agent_llm(allowed_tools=["list_repo_files", "get_file_content"])
+    llm_with_tools, tools = await get_agent_llm(allowed_tools=["analyze_codebase_complexity", "get_file_content"])
     sys_prompt = create_agent_prompt(
         "Sen 'Code Quality Inspector' ajanısın. Görevin kaynak kod dosyalarının (örn: .java, .js) içine girerek Clean Code (Temiz Kod), SOLID prensipleri, isimlendirme standartları ve fonksiyon boyutlarını incelemektir. Aday temiz ve okunabilir kod yazmış mı?",
         state["github_owner"], state["repo_name"], state["job_description"]
