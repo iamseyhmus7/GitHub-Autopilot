@@ -29,18 +29,21 @@ TTL: dict[str, int] = {
     "get_repo_info": 3600,         # 1 saat
     "list_commits": 300,           # 5 dakika
     "get_pr_diff": 600,            # 10 dakika
-    "get_workflow_logs": 60,       # 1 dakika
     "get_file_content": 1800,      # 30 dakika
     "list_repo_files": 1800,       # 30 dakika
     "search_code": 300,            # 5 dakika
     "get_commit_diff": 600,        # 10 dakika
     "get_contributor_stats": 3600, # 1 saat
     "list_pull_requests": 300,     # 5 dakika
-    "create_pr_review": 0,         # önbellek yok — yazma işlemi
     "list_issues": 300,            # 5 dakika
-    "create_issue": 0,             # önbellek yok — yazma işlemi
     "get_workflow_runs": 300,      # 5 dakika
     "list_user_repos": 3600,       # 1 saat
+    # 🧠 Derin analiz araçları
+    "analyze_architecture": 1800,          # 30 dakika
+    "analyze_dependencies": 1800,          # 30 dakika
+    "detect_entry_points": 1800,           # 30 dakika
+    "analyze_codebase_complexity": 1800,   # 30 dakika
+    "analyze_commit_patterns": 600,        # 10 dakika (daha sık değişir)
 }
 
 DEFAULT_TTL = 300  # 5 dakika varsayılan
