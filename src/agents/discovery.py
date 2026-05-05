@@ -27,10 +27,10 @@ async def repo_explorer_node(state: HRGraphState):
     }
 
 async def dependency_analyst_node(state: HRGraphState):
-    """Ajan 2: Dependency Analyst (Teknoloji & Kütüphane Analisti)"""
+    """Ajan 2: Dependency Analyst — analyze_dependencies derin analiz aracını kullanır"""
     print(f"🤖 [Ajan 2] Dependency Analyst {state['relevant_repos']} için tech-stack çıkarıyor...")
     
-    llm_with_tools, tools = await get_agent_llm(allowed_tools=["list_repo_files", "get_file_content"])
+    llm_with_tools, tools = await get_agent_llm(allowed_tools=["analyze_dependencies"])
     
     async def get_stack(repo):
         sys_prompt = create_agent_prompt(
